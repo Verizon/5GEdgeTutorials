@@ -320,6 +320,24 @@ def launchEKS():
             nodeASG=k["OutputValue"]
     print("CFN output retrieval complete...")
 
+    #Authorize SSH
+    response = client.authorize_security_group_ingress(
+    GroupId=nodeSecurityGroup,
+    IpPermissions=[
+        {
+            'FromPort': 22,
+            'IpProtocol': 'tcp',
+            'IpRanges': [
+                {
+                    'CidrIp': '0.0.0.0/0',
+                    'Description': 'SSH access',
+                },
+            ],
+            'ToPort': 22,
+        },
+    ],
+)
+
     #Get Instance ID/ENI ID of ASG node
     eksNodeInstanceId=asg.describe_auto_scaling_groups(AutoScalingGroupNames=[nodeASG])["AutoScalingGroups"][0]["Instances"][0]["InstanceId"]
     eksNodeEniId=client.describe_instances(InstanceIds=[eksNodeInstanceId])["Reservations"][0]["Instances"][0]["NetworkInterfaces"][0]["NetworkInterfaceId"]
@@ -338,6 +356,14 @@ def launchEKS():
     print("Carrier IP association complete..")
     ##eksCarrierIp=client.describe_addresses(AllocationIds=[ipAddress]["AllocationId"])["Addresses"][0]["CarrierIp"]
 
+    ##Auth for kubelets to permit EKS nodes to make API calls to the control plane.
+    f=open("aws-auth-cm.yaml","w")
+    f.write("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: aws-auth\n  namespace: kube-system\ndata:\n  mapRoles: |\n    - rolearn: "+str(nodeGroupProfile)+"\n      username: system:node:{{EC2PrivateDNSName}}\n      groups:\n        - system:bootstrappers\n        - system:nodes")
+    f.close()
+
+    #Apply config map
+    os.system("kubectl apply -f aws-auth-cm.yaml")
+    os.system("kubectl get nodes")
 
 if __name__ == "__main__":
     key=""
