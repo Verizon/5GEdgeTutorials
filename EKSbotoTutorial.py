@@ -7,14 +7,54 @@ import time
 import json
 def launchEKS():
     # create VPC
-    vpc = client.create_vpc(CidrBlock='10.0.0.0/16',
+    wlVpc = client.create_vpc(CidrBlock='10.0.0.0/16',
         TagSpecifications=[
             {'ResourceType': 'vpc','Tags': [{'Key': 'Name','Value': 'wl-vpc'}]},
             ]
         )
     time.sleep(1) #Provide time for VPC to launch
     print("VPC launch complete...")
-    vpc_id=vpc["Vpc"]["VpcId"]
+    vpc_id=wlVpc["Vpc"]["VpcId"]
+
+#*************** Parent region infrastructure*******************
+    #Create first subnet in parent region for control plane
+
+    #Create a route table and a public route
+    main_route_table = client.create_route_table(VpcId=vpc_id)
+    main_rt_id=main_route_table["RouteTable"]["RouteTableId"]
+    print("Main route table created...")
+    region_subnet_2 = client.create_subnet(CidrBlock='10.0.0.0/24',
+        TagSpecifications=[{'ResourceType': 'subnet','Tags': [{'Key': 'Name','Value': 'region-subnet2'}]}],
+        AvailabilityZone='us-east-1a',
+        VpcId=vpc_id
+        )
+    print("Parent region subnet launched..")
+    region_subnet_id_2=region_subnet_2["Subnet"]["SubnetId"]
+    response=client.modify_subnet_attribute(
+        MapPublicIpOnLaunch={
+            'Value': True
+        },
+        SubnetId=region_subnet_id_2
+    )
+    igw = client.create_internet_gateway(
+        TagSpecifications=[{'ResourceType':'internet-gateway','Tags': [{'Key': 'Name','Value': 'region-igw'}]}]
+    )
+    print("IGW creation complete..")
+    igw_id=igw["InternetGateway"]["InternetGatewayId"]
+    vpc=ec2.Vpc(vpc_id)
+    response = vpc.attach_internet_gateway(
+        InternetGatewayId=igw_id,
+    )
+    main_route = client.create_route(
+        DestinationCidrBlock='0.0.0.0/0',
+        GatewayId=igw_id,
+        RouteTableId=main_rt_id
+    )
+    key = client.create_key_pair(KeyName='eksKey')
+    keyMaterial=key["KeyMaterial"]
+    ec2_key=client.describe_key_pairs(KeyNames=['eksKey'])
+    print("Key pair complete..")
+
 
 #*************** Wavelength Zone Infrastructure********************************
     # Create carrier gateway
@@ -59,40 +99,7 @@ def launchEKS():
     )
     print("Security group initialization complete...")
 
-    # ##Allocate IP address
-    # ipAddress = client.allocate_address(
-    #     Domain='vpc',
-    #     NetworkBorderGroup='us-east-1-wl1-bos-wlz-1',
-    # )
-    # print("IP address allocated in NBG...")
-    # print(ipAddress)
-    #
-    # ##Create ENI
-    # eni=client.create_network_interface(SubnetId=subnet_id)
-    # eni_id=eni["NetworkInterface"]["NetworkInterfaceId"]
-    # print("ENI created..")
-    #
-    # ##Associate IP to ENI
-    # assoc = client.associate_address(
-    # AllocationId=ipAddress["AllocationId"],
-    # NetworkInterfaceId=eni_id,
-    # )
-    # print("Association of Carrier IP to ENI complete..")
-    #
-    #
-    # #Create EC2 Instance in Wavelength Zone
-    # instance = ec2.create_instances(
-    #     ImageId='ami-0947d2ba12ee1ff75',
-    #     InstanceType='t3.medium',
-    #     MaxCount=1,
-    #     MinCount=1,
-    #     SecurityGroupIds=[wlSecurityGroup.id],
-    #     NetworkInterfaces=[{'DeviceIndex': 0,"NetworkInterfaceId":eni_id}]
-    # )
-    # print("EC2 instance deployed...")
-#*************************************************************************
-
-    #Create subnet in parent region for control plane
+    #Create second subnet in parent region for control plane (multi-AZ)
     region_subnet = client.create_subnet(CidrBlock='10.0.2.0/24',
         TagSpecifications=[{'ResourceType': 'subnet','Tags': [{'Key': 'Name','Value': 'region-subnet1'}]}],
         AvailabilityZone='us-east-1b',
@@ -206,7 +213,7 @@ def launchEKS():
     roleArn=eksRoleARN,
     resourcesVpcConfig={
         'subnetIds': [
-            region_subnet_id
+            region_subnet_id,region_subnet_id_2
         ],
         'securityGroupIds': [
             regionSecurityGroupId
@@ -217,27 +224,63 @@ def launchEKS():
     )
     print("Private EKS cluster init complete..")
 
+    #Given it takes 15min to launch EKS cluster, evaluate completion progress
+    clusterLaunch=False
+    while (clusterLaunch==False):
+        try:
+            eksCluster=eks.describe_cluster(name='wavelength_eks')
+            print(eksCluster["cluster"])
+            apiServer=eksCluster["cluster"]["endpoint"]
+            certificateAuthority=eksCluster["cluster"]["certificateAuthority"]["data"]
+            clusterLaunch=True
+        except:
+            print("Cluster creation not complete. Waiting another minute..")
+            time.sleep(60)
+
     #Get API server
-    eksCluster=eks.describe_cluster(name='wavelength_eks')
-    apiServer=eksCluster["cluster"]["endpoint"]
-    certificateAuthority=eksCluster["cluster"]["certificateAuthority"]["data"]
+    # eksCluster=eks.describe_cluster(name='wavelength_eks')
+    # apiServer=eksCluster["cluster"]["endpoint"]
+    # certificateAuthority=eksCluster["cluster"]["certificateAuthority"]["data"]
     print("Nodegroup data retrieved..")
 
     #Launch self-managed worker node
-    response = client.create_stack(
+    response = cfn.create_stack(
     StackName='wavelength-eks-node',
     TemplateURL='https://amazon-eks.s3.us-west-2.amazonaws.com/cloudformation/2020-08-12/amazon-eks-nodegroup.yaml',
     Parameters=[
         {
-            'ClusterControlPlaneSecurityGroup': regionSecurityGroupId,
-            'NodeGroupName': "wavelength-eks-nodegroup",
-            'KeyName': True|False,
-            'Subnets': subnet_id,
-            'VpcId': vpc_id,
-            'ClusterName': 'wavelength_eks',
-            'NodeAutoScalingGroupDesiredCapacity': 1,
-            'BootstrapArguments': '--apiserver-endpoint $api_server  --b64-cluster-ca $certificate_authority',
+            'ParameterKey':'ClusterControlPlaneSecurityGroup',
+            'ParameterValue': regionSecurityGroupId
         },
+        {
+            'ParameterKey':'NodeGroupName',
+            'ParameterValue': 'wavelength-eks-nodegroup'
+        },
+        {
+            'ParameterKey':'KeyName',
+            'ParameterValue': 'eksKey'
+        },
+        {
+            'ParameterKey':'Subnets',
+            'ParameterValue': subnet_id
+        },
+        {
+            'ParameterKey':'VpcId',
+            'ParameterValue': vpc_id
+        },
+        {
+            'ParameterKey':'ClusterName',
+            'ParameterValue': "wavelength_eks"
+        },
+        {
+            'ParameterKey':'NodeAutoScalingGroupDesiredCapacity',
+            'ParameterValue': "1"
+        },
+        {
+            'ParameterKey':'BootstrapArguments',
+            'ParameterValue': '--apiserver-endpoint $api_server  --b64-cluster-ca $certificate_authority'
+        }
+
     ],
     Capabilities=[
         'CAPABILITY_NAMED_IAM',
@@ -249,7 +292,51 @@ def launchEKS():
         },
     ],
     )
-    print("Nodegroup creation complete..")
+
+    stackComplete=False
+    while (stackComplete==False):
+        try:
+            stack = cfn.describe_stacks(StackName='wavelength-eks-node')
+            print(stack["Stacks"][0])
+            print(stack["Stacks"][0]["StackStatus"])
+            if stack["Stacks"][0]["StackStatus"]=="CREATE_COMPLETE":
+                stackComplete=True
+        except:
+            print("CFN Stack creation not complete. Waiting another minute..")
+            time.sleep(60)
+    print("Stack creation complete..")
+
+    ##Get CFN Outputs
+    outputs=stack["Stacks"][0]["Outputs"]
+    print(outputs)
+    for k in outputs:
+        if k["OutputKey"]=="NodeInstanceRole":
+            nodeGroupProfile=k["OutputValue"]
+    for k in outputs:
+        if k["OutputKey"]=="NodeSecurityGroup":
+            nodeSecurityGroup=k["OutputValue"]
+    for k in outputs:
+        if k["OutputKey"]=="NodeAutoScalingGroup":
+            nodeASG=k["OutputValue"]
+    print("CFN output retrieval complete...")
+
+    #Get Instance ID/ENI ID of ASG node
+    eksNodeInstanceId=asg.describe_auto_scaling_groups(AutoScalingGroupNames=[nodeASG])["AutoScalingGroups"][0]["Instances"][0]["InstanceId"]
+    eksNodeEniId=client.describe_instances(InstanceIds=[eksNodeInstanceId])["Reservations"][0]["Instances"][0]["NetworkInterfaces"][0]["NetworkInterfaceId"]
+
+    ##Allocate IP address
+    ipAddress = client.allocate_address(
+        Domain='vpc',
+        NetworkBorderGroup='us-east-1-wl1-nyc-wlz-1',
+    )
+    print("IP address allocated in NBG...")
+    ##Associate IP to ENI
+    assoc = client.associate_address(
+        AllocationId=ipAddress["AllocationId"],
+        NetworkInterfaceId=eksNodeEniId,
+    )
+    print("Carrier IP association complete..")
+    ##eksCarrierIp=client.describe_addresses(AllocationIds=[ipAddress]["AllocationId"])["Addresses"][0]["CarrierIp"]
 
 
 if __name__ == "__main__":
@@ -259,5 +346,6 @@ if __name__ == "__main__":
     ec2 = boto3.resource('ec2',aws_access_key_id=key,aws_secret_access_key=secret,region_name='us-east-1')
     iam = boto3.client('iam',aws_access_key_id=key,aws_secret_access_key=secret,region_name='us-east-1')
     eks = boto3.client('eks',aws_access_key_id=key,aws_secret_access_key=secret,region_name='us-east-1')
+    asg = boto3.client('autoscaling',aws_access_key_id=key,aws_secret_access_key=secret,region_name='us-east-1')
     cfn = boto3.client('cloudformation',aws_access_key_id=key,aws_secret_access_key=secret,region_name='us-east-1')
     launchEKS()
