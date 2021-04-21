@@ -135,7 +135,7 @@ def launchEKS():
     s3EndpointId=s3Endpoint["VpcEndpoint"]["VpcEndpointId"]
     print("S3 endpoint complete..")
 
-    #Enable DNS support and DNS hsotnames
+    #Enable DNS support and DNS hostnames
     vpc=ec2.Vpc(vpc_id)
     response = vpc.modify_attribute(EnableDnsHostnames={'Value': True})
     response = vpc.modify_attribute(EnableDnsSupport={'Value': True})
@@ -362,6 +362,7 @@ def launchEKS():
     f.close()
 
     #Apply config map
+    os.system("aws eks  update-kubeconfig --name wavelength_eks")
     os.system("kubectl apply -f aws-auth-cm.yaml")
     os.system("kubectl get nodes")
 
