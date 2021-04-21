@@ -1,56 +1,44 @@
-# Verizon 5G Edge Demos
-_Tutorials, starter guides, and simple projects to launch your first application at the network edge.
-> Brought to you by the Verizon 5G Edge Developer Relations Team_
+# 5G Edge Tutorials
+This repository is home to CloudFormation templates, tutorials, code samples, and quick starts for 5G Edge infrastructure and applications.
 
-**What is 5G Edge?**
 
-Verizon 5G Edge and AWS Wavelength bring the power of the world’s leading cloud closer to mobile and connected devices at the edge of the Verizon 5G Ultra Wideband network. That means developers can build apps with ultralow latency, using familiar AWS services, APIs and tools via seamless extension of your Amazon Virtual Private Cloud.
+## CloudFormation Templates
+In the `cfn` subfolder, we maintain CloudFormation template for popular edge configurations, including:
+- EC2 instance in a Wavelength Zone
+- ECS cluster in a Wavelength Zone (control plane in parent region, task deployed to Wavelength)
+- EKS cluster in a Wavelength Zone (control plane in parent region, pods deployed to Wavelength)
+- Outpost configuration (in-development)
 
-To learn more, check out the AWS Wavelength page https://aws.amazon.com/wavelength/ here.
 
-## Table of Contents
 
-- [Background](#background)
-- [Install](#install)
-- [Usage](#usage)
-- [Contribute](#contribute)
-- [License](#license)
+## Tutorials
+For installation, Use the package manager [pip](https://pip.pypa.io/en/stable/) to install boto3.
 
-## Background
-
-We want to make it easier than ever to develop applications for the network edge. To that end, we've created a number of starter projects that get your AWS Wavelength infrastructure up-and-running in seconds. From there, feel free to experiment with some of the starter applications we've developed, including the following:
-
- - Automation of your first EC2 Instance on AWS Wavelength using Boto3
- - More projects coming soon!
-
-## Install
-
-To run the demo above, ensure you have Python3 and have the latest version of Boto3 downloaded
-
-```
+```bash
 pip install boto3
 ```
 
-Please note that the vast majority of the demos require an active AWS account and a set of authentication credentials. To learn how to generate AWS access keys, check out the Boto3 documentation [here](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html).
 
-## Usage
-
-_Describe what you expect people to do once they install this project. Add code blocks if relevant._
-
-**Boto3 tutorial**
-
-After including your AWS access and secret access keys, you can go ahead an run the automation document.
+For Auto Scaling tutorial:
 
 ```
-python botoTutorial.py
+python push_VZ_metrics.py
+python add_alarm.py
+python add_asg.py
 ```
 
-## Contribute
+For Hotdog/Not Hotdog tutorial:
+- Launch EKS cluster using CFN template
+- Schedule API/Inference/Web deployments + corresponding service
+```
+kubectl apply -f infDeployment.yaml
+kubectl apply -f apiDeployment.yaml
+kubectl apply -f webDeployment.yaml
+```
 
-Please refer to [the contributing.md file](Contributing.md) for information about how to get involved. We welcome issues, questions, and pull requests.
+For Boto3 tutorials:
+- To automate EC2 instance creation, `python wavelengthEC2.py`
+- To automate EKS cluster, `python EKSBotoTutorial.py`
 
-## Maintainers
-- Robbie Belson: robert.belson@one.verizon.com
-
-## License
-- This project is licensed under the terms of the [Apache 2.0](LICENSE-Apache-2.0) open source license. Please refer to [LICENSE](LICENSE) for the full terms.
+## Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
