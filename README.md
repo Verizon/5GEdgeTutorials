@@ -4,7 +4,7 @@ Tutorials, starter guides, and simple projects to launch your first application 
 
 **What is 5G Edge?**
 
-Verizon 5G Edge and AWS Wavelength bring the power of the AWS Cloud closer to mobile and connected devices at the edge of the Verizon 4G and 5G networks. That means developers can build apps with ultralow latency, using familiar AWS services, APIs and tools via seamless extension of your Amazon Virtual Private Cloud.
+Verizon 5G Edge with AWS Wavelength brings the power of the AWS Cloud closer to mobile and connected devices at the edge of the Verizon 4G and 5G networks. That means developers can build apps with low latency using familiar AWS services, APIs and tools via seamless extension of your Amazon Virtual Private Cloud.
 
 To learn more, check out the [AWS Wavelength page](https://aws.amazon.com/wavelength/).
 
@@ -37,13 +37,26 @@ Please note that the vast majority of the demos require an active AWS account an
 ## Usage
 
 
-**Boto3 tutorial**
+**Boto3 tutorials**
 
-After including your AWS access and secret access keys, you can go ahead an run the automation document.
+After generating your AWS access and secret access keys, you can go ahead an run the automation document.
 
 ```
 python EC2botoTutorial.py
 python EKSbotoTutorial.py
+```
+
+**CloudFormation templates**
+Within the `cloudformation-templates` folder, you can find a variety of popular infrastructure patterns within AWS Wavelength, including:
+- EC2 instance in a Wavelength Zone with auto-assigned Carrier IP
+- ECS cluster (EC2 Launch Type) with a task scheduled to Wavelength Zone
+
+From the CLI, create a CloudFormation stack using the following:
+```
+aws cloudformation create-stack \
+--stack-name myWavelengthStack \
+--template-body <selected-cfn-file> \
+--parameters ParameterKey=EnvironmentName,ParameterValue=WavelengthCloudFormation \
 ```
 
 ## Contribute
