@@ -107,7 +107,7 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref CarrierRouteTable
-      SubnetId: !Ref WavelengthZone1
+      SubnetId: !Ref WavelengthZone
 
   WLSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -131,7 +131,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier:
-        - !Ref WavelengthZone1
+        - !Ref WavelengthZone
       LaunchTemplate:
         LaunchTemplateId: !Ref 'WLLaunchTemplate'
         Version: 1
