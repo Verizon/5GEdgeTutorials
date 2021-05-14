@@ -368,8 +368,9 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Join ['', [!Ref 'AWS::StackName', -ecs-wlz-demo-app]]
+      NetworkMode: "host"
       ContainerDefinitions:
-      - Name: ecs-test-app
+      - Name: ecs-wlz-test-app
         Cpu: 256
         Essential: true
         Image: amazon/amazon-ecs-sample
@@ -378,7 +379,9 @@ Resources:
         - ContainerPath: /var/www/my-vol
           SourceVolume: my-vol
         PortMappings:
-        - ContainerPort: 80
+          -
+            ContainerPort: 80
+            HostPort: 80
         EntryPoint:
         - "/usr/sbin/apache2"
         - "-D"
@@ -397,6 +400,9 @@ Resources:
       DesiredCount: 1
       TaskDefinition: !Ref 'TaskDefinition'
       LaunchType: EC2
+      DeploymentConfiguration:
+          MaximumPercent: 100
+          MinimumHealthyPercent: 0
 
 Outputs:
   ClusterName:
