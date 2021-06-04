@@ -39,7 +39,7 @@ Please note that the vast majority of the demos require an active AWS account an
 
 **Boto3 tutorials**
 
-After generating your AWS access and secret access keys, you can go ahead an run the automation document.
+After generating your AWS access and secret access keys, navigate to the `sdk-tutorials` folder and you can go ahead an run either of the Boto3 infrastructure automation documents.
 
 ```
 python EC2botoTutorial.py
