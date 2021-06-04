@@ -1,0 +1,412 @@
+##5G Edge CloudFormation Template for ECS | Author: Robert Belson, Verizon 5G Edge Team
+Metadata:
+  License: Apache 2.0
+Description:  'This template schedules a task to an ECS cluster instance in a Wavelength Zone.
+**WARNING** This template creates an Amazon EC2 instance. You will be billed for the AWS
+resources used if you create a stack from this template.'
+
+Parameters:
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.0.0.0/16
+
+  WavelengthZoneCIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the Wavelength Zone
+    Type: String
+    Default: 10.0.0.0/24
+
+  ParentRegionSubnetCIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the Availability Zone
+    Type: String
+    Default: 10.0.1.0/24
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access into the container instances
+    Type: AWS::EC2::KeyPair::KeyName
+
+  WavelengthZoneGeo:
+    Type: String
+    Description: Enter a valid Wavelength Zone in the region. Please note the parent region of your selection must match the region of the other subnet you selected above.
+    Default: us-east-1-wl1-bos-wlz-1
+    AllowedValues:
+      - us-east-1-wl1-bos-wlz-1
+      - us-east-1-wl1-atl-wlz-1
+      - us-east-1-wl1-was-wlz-1
+      - us-east-1-wl1-nyc-wlz-1
+      - us-east-1-wl1-mia-wlz-1
+      - us-east-1-wl1-dfw-wlz-1
+      - us-west-2-wl1-las-wlz-1
+      - us-west-2-wl1-sfo-wlz-1
+      - us-west-2-wl1-den-wlz-1
+      - us-west-2-wl1-sea-wlz-1
+
+  ParentRegionGeo:
+    Type: String
+    Description: Enter a valid Availability Zone in the region.
+    Default: us-east-1a
+    AllowedValues:
+      - us-east-1a
+      - us-east-1b
+      - us-east-1c
+      - us-east-1d
+      - us-east-1e
+      - us-east-1f
+      - us-west-2a
+      - us-west-2b
+      - us-west-2c
+      - us-west-2d
+
+  WavelengthInstanceType:
+    Type: String
+    Description: Enter a valid instance type for Wavelength infrastructure.
+    Default: t3.medium
+    AllowedValues:
+      - t3.medium
+      - t3.xlarge
+      - r5.2xlarge
+      - g4dn.2xlarge
+
+  ECSAMI:
+    Description: AMI ID
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ecs/optimized-ami/amazon-linux/recommended/image_id
+    Description: The Amazon Machine Image ID used for the ECS cluster
+
+
+Resources:
+  #Start with single VPC in user-selected region
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+ #Carrier gateway access for carrier subnet in Wavelength Zone
+  CarrierGateway:
+    Type: AWS::EC2::CarrierGateway
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+  #Internet gateway access for public subnet in Availability Zone
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  #Subnets for VPC
+  AvailabilityZone1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref ParentRegionGeo
+      CidrBlock: !Ref ParentRegionSubnetCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Availability Zone
+  WavelengthZone1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref WavelengthZoneGeo
+      CidrBlock: !Ref WavelengthZoneCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Wavelength Zone
+
+  #Availability Zone Routing
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Parent Route Table
+  DefaultIGWRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref AvailabilityZone1
+
+  #Wavelength Zone Routing
+  CarrierRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WLZ Route Table
+  DefaultCGWRoute:
+    Type: AWS::EC2::Route
+    DependsOn: CarrierGateway
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      CarrierGatewayId: !Ref CarrierGateway
+  CarrierRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      SubnetId: !Ref WavelengthZone1
+
+ #Security group for Auto Scaling Group
+  WLSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: wl-sg
+      GroupDescription: Security group with HTTP access
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 32768
+        ToPort: 65535
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 32768
+        ToPort: 65535
+        CidrIp: 0.0.0.0/0
+  EC2InterfaceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: ec2-interface-endpoint-sg
+      GroupDescription: Security group with HTTPS access
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        CidrIp: 0.0.0.0/0
+
+  #VPC Endpoints
+  ECSEndpointAgent:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SubnetIds:
+        - !Ref AvailabilityZone1
+      SecurityGroupIds:
+        - !Ref EC2InterfaceSG
+      ServiceName: !Sub
+        - com.amazonaws.${region}.ecs-agent
+        - { region: !Ref "AWS::Region" }
+      VpcId: !Ref VPC
+  ECSEndpointTelemetry:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref EC2InterfaceSG
+      SubnetIds:
+        - !Ref AvailabilityZone1
+      ServiceName: !Sub
+        - com.amazonaws.${region}.ecs-telemetry
+        - { region: !Ref "AWS::Region" }
+      VpcId: !Ref VPC
+  ECSEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref EC2InterfaceSG
+      SubnetIds:
+        - !Ref AvailabilityZone1
+      ServiceName: !Sub
+        - com.amazonaws.${region}.ecs
+        - { region: !Ref "AWS::Region" }
+      VpcId: !Ref VPC
+
+  # ECS Resources
+  ECSCluster:
+      Type: AWS::ECS::Cluster
+      Properties:
+        ClusterName: ECSCluster
+  ECSAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - !Ref WavelengthZone1
+      LaunchTemplate:
+        LaunchTemplateId: !Ref 'LaunchTemplate'
+        Version: 1
+      MinSize: '1'
+      MaxSize: '1'
+      DesiredCapacity: '1'
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: 'true'
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [!Ref 'EC2Role']
+  LaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
+    Properties:
+      LaunchTemplateName: !Sub '${AWS::StackName}-launch-template-for-auto-scaling'
+      LaunchTemplateData:
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            AssociateCarrierIpAddress: true
+            Groups:
+              - !Ref 'WLSecurityGroup'
+            DeleteOnTermination: true
+        ImageId: !Ref 'ECSAMI'
+        InstanceType: !Ref 'WavelengthInstanceType'
+        KeyName: !Ref 'KeyName'
+        IamInstanceProfile:
+          Arn: !GetAtt
+            - 'EC2InstanceProfile'
+            - Arn
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash -xe
+            echo ECS_CLUSTER=ECSCluster >> /etc/ecs/ecs.config
+
+  #IAM role used to allow AWS Auto Scaling to inspect resources
+  AutoscalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [application-autoscaling.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+      - PolicyName: service-autoscaling
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+              - 'application-autoscaling:*'
+              - 'cloudwatch:DescribeAlarms'
+              - 'cloudwatch:PutMetricAlarm'
+              - 'ecs:DescribeServices'
+              - 'ecs:UpdateService'
+            Resource: '*'
+
+ # IAM Role for EC2 instances alllowing ECS agent to communciate with the control plane
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [ec2.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+      - PolicyName: ecs-service
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+              - 'ecs:CreateCluster'
+              - 'ecs:DeregisterContainerInstance'
+              - 'ecs:DiscoverPollEndpoint'
+              - 'ecs:Poll'
+              - 'ecs:RegisterContainerInstance'
+              - 'ecs:StartTelemetrySession'
+              - 'ecs:Submit*'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+              - 'ecr:GetAuthorizationToken'
+              - 'ecr:BatchGetImage'
+              - 'ecr:GetDownloadUrlForLayer'
+            Resource: '*'
+
+#Task definition with container definition
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Join ['', [!Ref 'AWS::StackName', -ecs-wlz-demo-app]]
+      NetworkMode: "host"
+      ContainerDefinitions:
+      - Name: ecs-wlz-test-app
+        Cpu: 256
+        Essential: true
+        Image: amazon/amazon-ecs-sample
+        Memory: 512
+        MountPoints:
+        - ContainerPath: /var/www/my-vol
+          SourceVolume: my-vol
+        PortMappings:
+          -
+            ContainerPort: 80
+            HostPort: 80
+        EntryPoint:
+        - "/usr/sbin/apache2"
+        - "-D"
+        - "FOREGROUND"
+      Volumes:
+      - Name: my-vol
+        Host:
+          SourcePath: "/var/lib/docker/vfs/dir/"
+
+#ECS service to schedule instance of task definition
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: MyService
+      Cluster: !Ref 'ECSCluster'
+      DesiredCount: 1
+      TaskDefinition: !Ref 'TaskDefinition'
+      LaunchType: EC2
+      DeploymentConfiguration:
+          MaximumPercent: 100
+          MinimumHealthyPercent: 0
+
+Outputs:
+  ClusterName:
+    Description: The name of the ECS cluster
+    Value: !Ref 'ECSCluster'
+    Export:
+      Name: !Sub ${EnvironmentName}:ClusterName
