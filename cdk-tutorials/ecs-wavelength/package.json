@@ -1,0 +1,27 @@
+{
+  "name": "ec2-wavelength-cdk-app",
+  "version": "1.0.0",
+  "description": "Generate an EC2 instance in a Wavelength availability zone (5G Edge).",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk"
+  },
+  "author": "Justin St. Arnauld",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "10.17.27",
+    "ts-node": "^9.0.0",
+    "typescript": "~3.9.7"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-autoscaling": "^1.108.1",
+    "@aws-cdk/aws-ec2": "^1.108.1",
+    "@aws-cdk/aws-ecs": "^1.108.1",
+    "@aws-cdk/aws-iam": "1.108.1",
+    "@aws-cdk/core": "1.108.1",
+    "dotenv": "^10.0.0",
+    "source-map-support": "^0.5.16"
+  }
+}
