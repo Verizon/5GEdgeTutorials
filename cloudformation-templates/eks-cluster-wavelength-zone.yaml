@@ -269,8 +269,11 @@ Resources:
       ServiceName: !Sub
         - com.amazonaws.${region}.ec2
         - { region: !Ref "AWS::Region" }
+      SecurityGroupIds:
+        - !Ref ClusterSecurityGroup
       SubnetIds:
         - !Ref AvailabilityZone1
+        - !Ref AvailabilityZone2
       VpcEndpointType: Interface
       PrivateDnsEnabled: True
       VpcId: !Ref VPC
@@ -284,6 +287,7 @@ Resources:
         - { region: !Ref "AWS::Region" }
       SubnetIds:
         - !Ref AvailabilityZone1
+        - !Ref AvailabilityZone2
       VpcEndpointType: Interface
       PrivateDnsEnabled: True
       VpcId: !Ref VPC
@@ -297,6 +301,7 @@ Resources:
         - { region: !Ref "AWS::Region" }
       SubnetIds:
         - !Ref AvailabilityZone1
+        - !Ref AvailabilityZone2
       VpcEndpointType: Interface
       PrivateDnsEnabled: True
       VpcId: !Ref VPC
