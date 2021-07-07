@@ -1,0 +1,275 @@
+##5G Edge CloudFormation Template for multi-Wavelength Zone VPC | Author: Robert Belson, Verizon 5G Edge Team
+Metadata:
+  License: Apache 2.0
+Description:  'This template creates three EC2 instances across three Wavelength Zones.
+**WARNING** This template creates EC2 instances. You will be billed for the AWS
+resources used if you create a stack from this template.'
+
+Parameters:
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.0.0.0/16
+
+  WavelengthZoneCIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in a Wavelength Zone
+    Type: String
+    Default: 10.0.0.0/24
+
+  WavelengthZone2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the second Wavelength Zone
+    Type: String
+    Default: 10.0.1.0/24
+
+  WavelengthZone3CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the third Wavelength Zone
+    Type: String
+    Default: 10.0.2.0/24
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: test_key
+
+  WavelengthZoneGeo:
+    Type: String
+    Description: Enter a valid Wavelength Zone in the region. Please note the parent region of your selection must match the region of the other subnet you selected above.
+    Default: us-east-1-wl1-bos-wlz-1
+    AllowedValues:
+      - us-east-1-wl1-bos-wlz-1
+      - us-east-1-wl1-atl-wlz-1
+      - us-east-1-wl1-was-wlz-1
+      - us-east-1-wl1-nyc-wlz-1
+      - us-east-1-wl1-mia-wlz-1
+      - us-east-1-wl1-dfw-wlz-1
+      - us-west-2-wl1-las-wlz-1
+      - us-west-2-wl1-sfo-wlz-1
+      - us-west-2-wl1-den-wlz-1
+      - us-west-2-wl1-sea-wlz-1
+
+  WavelengthZone2Geo:
+    Type: String
+    Description: Enter a valid Wavelength Zone in the region. Please note the parent region of your selection must match the region of the other subnet you selected above.
+    Default: us-east-1-wl1-nyc-wlz-1
+    AllowedValues:
+      - us-east-1-wl1-bos-wlz-1
+      - us-east-1-wl1-atl-wlz-1
+      - us-east-1-wl1-was-wlz-1
+      - us-east-1-wl1-nyc-wlz-1
+      - us-east-1-wl1-mia-wlz-1
+      - us-east-1-wl1-dfw-wlz-1
+      - us-west-2-wl1-las-wlz-1
+      - us-west-2-wl1-sfo-wlz-1
+      - us-west-2-wl1-den-wlz-1
+      - us-west-2-wl1-sea-wlz-1
+
+  WavelengthZone3Geo:
+    Type: String
+    Description: Enter a valid Wavelength Zone in the region. Please note the parent region of your selection must match the region of the other subnet you selected above.
+    Default: us-east-1-wl1-was-wlz-1
+    AllowedValues:
+      - us-east-1-wl1-bos-wlz-1
+      - us-east-1-wl1-atl-wlz-1
+      - us-east-1-wl1-was-wlz-1
+      - us-east-1-wl1-nyc-wlz-1
+      - us-east-1-wl1-mia-wlz-1
+      - us-east-1-wl1-dfw-wlz-1
+      - us-west-2-wl1-las-wlz-1
+      - us-west-2-wl1-sfo-wlz-1
+      - us-west-2-wl1-den-wlz-1
+      - us-west-2-wl1-sea-wlz-1
+  WavelengthInstanceType:
+    Type: String
+    Description: Enter a valid instance type for Wavelength infrastructure.
+    Default: t3.medium
+    AllowedValues:
+      - t3.medium
+      - t3.xlarge
+      - r5.2xlarge
+      - g4dn.2xlarge
+Mappings:
+  RegionMap:
+    us-east-1:
+      HVM64: ami-04d29b6f966df1537
+    us-west-2:
+      HVM64: ami-0e472933a1395e172
+
+Resources:
+  #Start with single VPC in user-selected region
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+ #Carrier gateway access for carrier subnet in Wavelength Zone
+  CarrierGateway:
+    Type: AWS::EC2::CarrierGateway
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+  WavelengthZone:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref WavelengthZoneGeo
+      CidrBlock: !Ref WavelengthZoneCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Wavelength Zone
+  WavelengthZone2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref WavelengthZone2Geo
+      CidrBlock: !Ref WavelengthZone2CIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Wavelength Zone 2
+  WavelengthZone3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref WavelengthZone3Geo
+      CidrBlock: !Ref WavelengthZone3CIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Wavelength Zone 3
+  #Wavelength Zone Routing
+  CarrierRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WLZ Route Table
+  DefaultCGWRoute:
+    Type: AWS::EC2::Route
+    DependsOn: CarrierGateway
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      CarrierGatewayId: !Ref CarrierGateway
+  CarrierRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      SubnetId: !Ref WavelengthZone
+  CarrierRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      SubnetId: !Ref WavelengthZone2
+  CarrierRouteTableAssociation3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      SubnetId: !Ref WavelengthZone3
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: wl-sg
+      GroupDescription: Security group with HTTP access
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+
+  # Autoscaling group for EC2 instances
+  AutoScalingGroupEdge:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      Tags:
+        - Key: "Edge"
+          Value: "true"
+          PropagateAtLaunch: true
+      VPCZoneIdentifier:
+        - !Ref WavelengthZone
+      LaunchTemplate:
+        LaunchTemplateId: !Ref 'WLLaunchTemplate'
+        Version: 1
+      MinSize: '1'
+      MaxSize: '1'
+      DesiredCapacity: '1'
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: 'true'
+  AutoScalingGroupEdge2:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      Tags:
+        - Key: "Edge"
+          Value: "true"
+          PropagateAtLaunch: true
+      VPCZoneIdentifier:
+        - !Ref WavelengthZone2
+      LaunchTemplate:
+        LaunchTemplateId: !Ref 'WLLaunchTemplate'
+        Version: 1
+      MinSize: '1'
+      MaxSize: '1'
+      DesiredCapacity: '1'
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: 'true'
+  AutoScalingGroupEdge3:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      Tags:
+        - Key: "Edge"
+          Value: "true"
+          PropagateAtLaunch: true
+      VPCZoneIdentifier:
+        - !Ref WavelengthZone3
+      LaunchTemplate:
+        LaunchTemplateId: !Ref 'WLLaunchTemplate'
+        Version: 1
+      MinSize: '1'
+      MaxSize: '1'
+      DesiredCapacity: '1'
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: 'true'
+
+  WLLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub '${AWS::StackName}-launch-template-for-auto-scaling'
+      LaunchTemplateData:
+        BlockDeviceMappings:
+        - DeviceName: /dev/sdh
+          Ebs:
+            VolumeSize: 50
+            VolumeType: gp2
+            DeleteOnTermination: true
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            AssociateCarrierIpAddress: true
+            Groups:
+              - !Ref 'SecurityGroup'
+            DeleteOnTermination: true
+        ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", HVM64]
+        InstanceType: !Ref 'WavelengthInstanceType'
+        KeyName: !Ref 'KeyName'
+
+Outputs:
+  VPC:
+    Description: A reference to the created VPC
+    Value: !Ref VPC
