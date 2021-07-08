@@ -1,4 +1,4 @@
-# Verizon Edge Discovery Service
+# Edge discovery service
 > Getting Started Guide for Python Developers
 
 The power of MEC resides in part in its ability to provide local computing with low latency, by having mobile clients use the nearest MEC node to handle application traffic. Until now, doing so has been unnecessarily complex and has relied on undifferentiated heavy lifting, including identifying client geolocation through best-effort services or, even worse, manually mapping carrier IP addresses.
@@ -23,7 +23,7 @@ We want to make it easier than ever to get started with Edge Discovery Today! If
 
 This provides you with the perfect setup to get started with dynamic routing at the edge with Verizon EDS.
 
-## Step 2: Configure the Verizon Edge Discovery Service
+## Step 2: Configure the Edge discovery service
 For the first step, you'll need to create account on our [5G Edge Portal](https://5gedge.verizon.com/) to access a key pair. Once logged in, visit the `API Keys` subsection of the developer portal to get started.
 
 ![5G Edge Developer Portal Login](./img/console_login.png)

@@ -4,7 +4,7 @@ import random
 ##########################################################################################################################################
 
 """
-Step 1: Authenticate to Verizon Edge Discovery Service
+Step 1: Authenticate to Edge discovery service
 
 Inputs
     ----------
