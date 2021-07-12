@@ -1,4 +1,4 @@
-# Edge discovery service
+# Edge Discovery module for Verizon 5G Edge
 > Getting Started Guide for Python Developers
 
 The power of MEC resides in part in its ability to provide local computing with low latency, by having mobile clients use the nearest MEC node to handle application traffic. Until now, doing so has been unnecessarily complex and has relied on undifferentiated heavy lifting, including identifying client geolocation through best-effort services or, even worse, manually mapping carrier IP addresses.
