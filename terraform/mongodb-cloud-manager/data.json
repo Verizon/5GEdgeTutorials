@@ -1,0 +1,201 @@
+{
+  "agentVersion" : {
+    "directoryUrl" : "https://s3.amazonaws.com/mongodb-mms-build-agent/releases/prod/",
+    "name" : "11.6.0.7119-1"
+  },
+  "atlasProxies" : [ ],
+  "auth" : {
+    "authoritativeSet" : false,
+    "autoAuthMechanism" : "SCRAM-SHA-256",
+    "autoAuthMechanisms" : [ "SCRAM-SHA-256" ],
+    "autoAuthRestrictions" : [ ],
+    "autoPwd" : "VG2Nx0JeqD4vzzZRV59rxPZh",
+    "autoUser" : "mms-automation",
+    "deploymentAuthMechanisms" : [ "SCRAM-SHA-256" ],
+    "disabled" : false,
+    "key" : "6KEeRNAYPg3KdSZyRsz8TdanKF9QoYuneVq4x3Sz7O4uj1rEdkSCHTbnqQ04DUpOpkPzRB1DPt4dCfivxy9bK7tJPG1Eefd4gCy8tYIDHFDJ4UBAW2PTx9Gjd3M13y8ddpjc62IwMQCF3Zs0E4mNB3s8St1bQLXD1NykBAhQgckAPx3v8KkCtIOF52R661WYeQbxONaBvY5yrPX852JbwSu1KcgZF4qGpWfVTIcw09Uv5RnVr1VZAly2agVpOlhyo4RD5DwjCb8qhF5CpLBmby2Z5TsUcPw33pScF8uoYmfb8YEwhHcux6kwblVKFunyi2aKlFusBWnc1nZskd75mUEOCkSL96Ab3ZZSTI9gwBjC4tuJLgh6bSCaXf53rZAmIlFvTubQQG0G56js5wSIjaBEqA7YjrMuEXkd4KdrutKq2THyFzKYz8vj6WKsvrAhjllDgGJz028j8Zl6mtisekIsXAuCHlRuxFfgPdVs3nv2KPpHsN3BIwE8Ckwu9gFgvwbv4cyNGgwnU8OVRKaOOyzKqRO1erSo3iVu2qhq9tvvKax6a0ZbE52lqfwL2nhO69VFMLf2Dgm9WdgG0DnxPdUJxbfCogQ7A0IIrZb1sXhRVmj69CRRJreen5ftx9qaBHfg38GqAnozwADvdSUujD0mUhd3mr8RGzKSq2yj7hAiDRgCmc9nJFsL4MMWWHDVgQI16sRAcqtG3GYrg7JEsyxLfRYJSRL9vpvGnySTZltHiNDYg9mYuSBjPHVs10FBRHRgWMLBlvebEuncmirlKbzuJxEYiQAT0Xi2SgJwffrf0U1LcUO2wJrlsPNHknU019gz60xvZCSP5PJIKLrvVDUV36N97WnEYQM71EqXmEWE1el65CCIOxDxHRuFndojypyHLbBJQ47x7PYDxsaFwOi9zrEuKNuwJRF5FGRSw1TdXBz4Pydn5i5wnwt11EXMvyEOu5KpOS7sna5UyEW3G0a7ZgwrcX3YDYBbQlVbqgoJaNUXST9LJO4NI0ZjV5IS",
+    "keyfile" : "/var/lib/mongodb-mms-automation/keyfile",
+    "keyfileWindows" : "%SystemDrive%\\MMSAutomation\\versions\\keyfile",
+    "usersDeleted" : [ ],
+    "usersWanted" : [ ]
+  },
+  "backupVersions" : [ {
+    "hostname" : "node_a",
+    "name" : "7.8.1.1109-1"
+  }, {
+    "hostname" : "node_b",
+    "name" : "7.8.1.1109-1"
+  }, {
+    "hostname" : "node_c",
+    "name" : "7.8.1.1109-1"
+  } ],
+  "balancer" : { },
+  "cpsModules" : [ ],
+  "filebeat" : { },
+  "indexConfigs" : [ ],
+  "kerberos" : {
+    "serviceName" : "mongodb"
+  },
+  "ldap" : { },
+  "mongoDbVersions" : [{
+    "builds" : [{
+      "architecture" : "amd64",
+      "bits" : 64,
+      "flavor" : "amazon2",
+      "gitVersion" : "657fea5a61a74d7a79df7aff8e4bcf0bc742b748",
+      "maxOsVersion" : "",
+      "minOsVersion" : "2",
+      "modules" : [ "enterprise" ],
+      "platform" : "linux",
+      "url" : "https://downloads.mongodb.com/linux/mongodb-linux-x86_64-enterprise-amazon2-5.0.3.tgz"
+    }],
+    "name" : "5.0.3"
+  }],
+  "mongosqlds" : [ ],
+  "mongots" : [ ],
+  "monitoringVersions" : [ {
+    "hostname" : "node_a",
+    "name" : "7.2.0.488-1"
+  }, {
+    "hostname" : "node_b",
+    "name" : "7.2.0.488-1"
+  }, {
+    "hostname" : "node_c",
+    "name" : "7.2.0.488-1"
+  } ],
+  "onlineArchiveModules" : [ ],
+  "options" : {
+    "downloadBase" : "/var/lib/mongodb-mms-automation",
+    "downloadBaseWindows" : "%SystemDrive%\\MMSAutomation\\versions"
+  },
+  "processes" : [ {
+    "args2_6" : {
+      "net" : {
+        "port" : 27017,
+        "tls" : { }
+      },
+      "replication" : {
+        "replSetName" : "TestCluster"
+      },
+      "security" : { },
+      "storage" : {
+        "dbPath" : "/data"
+      },
+      "systemLog" : {
+        "destination" : "file",
+        "path" : "/data/mongodb.log"
+      }
+    },
+    "authSchemaVersion" : 5,
+    "disabled" : false,
+    "featureCompatibilityVersion" : "5.0",
+    "hostname" : "node_a",
+    "logRotate" : {
+      "sizeThresholdMB" : 1000.0,
+      "timeThresholdHrs" : 24
+    },
+    "manualMode" : false,
+    "name" : "TestCluster_1",
+    "processType" : "mongod",
+    "version" : "5.0.3"
+  }, {
+    "args2_6" : {
+      "net" : {
+        "port" : 27017,
+        "tls" : { }
+      },
+      "replication" : {
+        "replSetName" : "TestCluster"
+      },
+      "security" : { },
+      "storage" : {
+        "dbPath" : "/data"
+      },
+      "systemLog" : {
+        "destination" : "file",
+        "path" : "/data/mongodb.log"
+      }
+    },
+    "authSchemaVersion" : 5,
+    "disabled" : false,
+    "featureCompatibilityVersion" : "5.0",
+    "hostname" : "node_b",
+    "logRotate" : {
+      "sizeThresholdMB" : 1000.0,
+      "timeThresholdHrs" : 24
+    },
+    "manualMode" : false,
+    "name" : "TestCluster_2",
+    "processType" : "mongod",
+    "version" : "5.0.3"
+  }, {
+    "args2_6" : {
+      "net" : {
+        "port" : 27017,
+        "tls" : { }
+      },
+      "replication" : {
+        "replSetName" : "TestCluster"
+      },
+      "security" : { },
+      "storage" : {
+        "dbPath" : "/data"
+      },
+      "systemLog" : {
+        "destination" : "file",
+        "path" : "/data/mongodb.log"
+      }
+    },
+    "authSchemaVersion" : 5,
+    "disabled" : false,
+    "featureCompatibilityVersion" : "5.0",
+    "hostname" : "node_c",
+    "logRotate" : {
+      "sizeThresholdMB" : 1000.0,
+      "timeThresholdHrs" : 24
+    },
+    "manualMode" : false,
+    "name" : "TestCluster_3",
+    "processType" : "mongod",
+    "version" : "5.0.3"
+  } ],
+  "replicaSets" : [ {
+    "_id" : "TestCluster",
+    "members" : [ {
+      "_id" : 0,
+      "arbiterOnly" : false,
+      "buildIndexes" : true,
+      "hidden" : false,
+      "host" : "TestCluster_1",
+      "priority" : 1.0,
+      "secondaryDelaySecs" : 0,
+      "votes" : 1
+    }, {
+      "_id" : 1,
+      "arbiterOnly" : false,
+      "buildIndexes" : true,
+      "hidden" : false,
+      "host" : "TestCluster_2",
+      "priority" : 1.0,
+      "secondaryDelaySecs" : 0,
+      "votes" : 1
+    }, {
+      "_id" : 2,
+      "arbiterOnly" : false,
+      "buildIndexes" : true,
+      "hidden" : false,
+      "host" : "TestCluster_3",
+      "priority" : 1.0,
+      "secondaryDelaySecs" : 0,
+      "votes" : 1
+    } ],
+    "protocolVersion" : "1",
+    "settings" : { }
+  } ],
+  "roles" : [ ],
+  "sharding" : [ ],
+  "tls" : {
+    "clientCertificateMode" : "OPTIONAL"
+  },
+  "version" : 6
+}
