@@ -9,8 +9,8 @@ assert (
 
 WL_AZ = "us-west-2-wl1-phx-wlz-1"
 
-INSEEGO_IP = {"CidrIp": "174.205.236.186/32", "Description": "Inseego IP"}
-VERIZON_IP = {"CidrIp": "168.149.161.46/32", "Description": "Verizon IP"}
+INSEEGO_IP = {"CidrIp": "174.205.247.132/32", "Description": "Inseego IP"}
+VERIZON_IP = {"CidrIp": "162.115.44.102/32", "Description": "Verizon IP"}
 
 SSH_PERMISSION = {
     "IpProtocol": "tcp",
@@ -115,14 +115,17 @@ def deployWL():
 
     with open("boto-keypair.pem", "w") as private_key_file:
         private_key_file.write(keypair["KeyMaterial"])
+    # TODO: Set file permissions
 
-    # TODO: User data (startup scripts)
+    with open("scripts/iperf.sh") as user_data_file:
+        user_data = user_data_file.read()
 
     bastion_instance = ec2_resource.create_instances(
         MinCount=1,
         MaxCount=1,
         ImageId=VZ_CENTOS7_AMI,
         InstanceType=BASTION_INSTANCE_TYPE,
+        KeyName=KEYPAIR_NAME,
         NetworkInterfaces=[
             {
                 "DeviceIndex": 0,
@@ -131,10 +134,14 @@ def deployWL():
                 "Groups": [bastion_sg.group_id],
             }
         ],
+        UserData=user_data,
     )[0]
 
     carrier_ip = ec2_client.allocate_address(Domain="vpc", NetworkBorderGroup=WL_AZ)
-    carrier_intf = ec2_client.create_network_interface(SubnetId=wl_subnet.id)
+    carrier_intf = ec2_client.create_network_interface(
+        SubnetId=wl_subnet.id,
+        Groups=[wl_sg.group_id],
+    )
     carrier_intf_id = carrier_intf["NetworkInterface"]["NetworkInterfaceId"]
     ec2_client.associate_address(
         AllocationId=carrier_ip["AllocationId"], NetworkInterfaceId=carrier_intf_id
@@ -145,8 +152,15 @@ def deployWL():
         MaxCount=1,
         ImageId=AWS_CENTOS7_AMI,
         InstanceType=WAVELENGTH_INSTANCE_TYPE,
-        NetworkInterfaces=[{"DeviceIndex": 0, "NetworkInterfaceId": carrier_intf_id}],
+        KeyName=KEYPAIR_NAME,
+        NetworkInterfaces=[
+            {
+                "DeviceIndex": 0,
+                "NetworkInterfaceId": carrier_intf_id,
+            }
+        ],
         Placement={"AvailabilityZone": WL_AZ},
+        UserData=user_data,
     )[0]
 
     try:
@@ -203,6 +217,7 @@ def deployWL():
 # TODO: Delete VPC
 # TODO: Delete IAM policies
 # TODO: Delete IAM role
+# TODO: Delete local key file
 
 if __name__ == "__main__":
     deployWL()
