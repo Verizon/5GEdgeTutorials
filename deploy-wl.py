@@ -9,8 +9,8 @@ assert (
 
 WL_AZ = "us-west-2-wl1-phx-wlz-1"
 
-INSEEGO_IP = {"CidrIp": "174.205.247.132/32", "Description": "Inseego IP"}
-VERIZON_IP = {"CidrIp": "162.115.44.102/32", "Description": "Verizon IP"}
+CARRIER_CLIENT_IPS = {"CidrIp": "174.205.0.0/16", "Description": "Carrier client IPs"}
+VERIZON_IP = {"CidrIp": "168.149.160.133/32", "Description": "Verizon IP"}
 
 SSH_PERMISSION = {
     "IpProtocol": "tcp",
@@ -31,7 +31,8 @@ ANY_IP_PERMISSION = {
     "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "Any IP"}],
 }
 
-VZ_CENTOS7_AMI = "ami-0d2d88144bce4de9c"
+# VZ_CENTOS7_AMI = "ami-0d2d88144bce4de9c"
+VZ_CENTOS7_AMI = "ami-0348652b6078c2c1d"
 AWS_CENTOS7_AMI = "ami-0348652b6078c2c1d"
 
 BASTION_INSTANCE_TYPE = "t3.medium"
@@ -77,14 +78,16 @@ def deployWL():
     )
     carrier_route_table.associate_with_subnet(SubnetId=wl_subnet.id)
 
+    # TODO: Allow ICMP
+    # TODO: Allow UDP (iperf)
     bastion_sg = ec2_resource.create_security_group(
         VpcId=vpc.id, GroupName="BastionSG", Description="Allow SSH and iperf in"
     )
     ec2_client.authorize_security_group_ingress(
         GroupId=bastion_sg.id,
         IpPermissions=[
-            SSH_PERMISSION | {"IpRanges": [INSEEGO_IP, VERIZON_IP]},
-            IPERF_PERMISSION | {"IpRanges": [INSEEGO_IP, VERIZON_IP]},
+            SSH_PERMISSION | {"IpRanges": [CARRIER_CLIENT_IPS, VERIZON_IP]},
+            IPERF_PERMISSION | {"IpRanges": [CARRIER_CLIENT_IPS, VERIZON_IP]},
         ],
     )
     ec2_client.authorize_security_group_egress(
@@ -99,10 +102,10 @@ def deployWL():
         IpPermissions=[
             SSH_PERMISSION
             | {
-                "IpRanges": [INSEEGO_IP],
+                "IpRanges": [CARRIER_CLIENT_IPS],
                 "UserIdGroupPairs": [{"GroupId": bastion_sg.id}],
             },
-            IPERF_PERMISSION | {"IpRanges": [INSEEGO_IP]},
+            IPERF_PERMISSION | {"IpRanges": [CARRIER_CLIENT_IPS]},
         ],
     )
     ec2_client.authorize_security_group_egress(
