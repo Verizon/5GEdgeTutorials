@@ -116,7 +116,7 @@ def deleteServiceProfile(accessToken,serviceProfileId):
 
 
 #Create Service Registry for Edge Records
-def createServiceRegistry(accessToken,serviceProfileId,carrierIps,availabilityZones,applicationId):
+def createServiceRegistry(accessToken,serviceProfileId,carrierIps,availabilityZones,applicationId,fqdns):
   print("\nCreating service registry with Carrier IP information...")
   url = "https://5gedge.verizon.com/api/mec/eds/serviceendpoints"
   payload=[]
@@ -126,26 +126,26 @@ def createServiceRegistry(accessToken,serviceProfileId,carrierIps,availabilityZo
         "ern": str(availabilityZones[i]),
         "serviceEndpoint": {
           "URI": "http://api/test/id",
-          "FQDN": "aceg1357.com",
+          "FQDN": str(fqdns[i]),
           "IPv4Address": str(carrierIps[i]),
           "IPv6Address": "2001:0db8:5b96:0000:0000:426f:8e17:642a",
           "port": 80
         },
         "applicationServerProviderId": "AWS",
-        "applicationId": str(applicationId),
+        "applicationId": str(applicationId)+str(random.randint(1,10000000000)),
         "serviceDescription": "Test application on Verizon 5G Edge"
       },
       "serviceProfileID": str(serviceProfileId)
       }
     payload.append(newRecord)
   payload=json.dumps(payload)
-
   headers = {
     'Authorization': 'Bearer '+str(accessToken),
     'Content-Type': 'application/json',
   }
   response = requests.request("POST", url, headers=headers, data=payload)
   output=response.json()
+  print(output)
   serviceEndpointsId=output["serviceEndpointsId"]
   print(f"Your Service Endpoints ID: {serviceEndpointsId}")
   print(f"Your Application ID: {applicationId}")
@@ -195,12 +195,14 @@ def deleteServiceRegistry(accessToken,serviceEndpointsId):
 def discoverClosestEdgeZone(accessToken,serviceEndpointsId,UEIdentity):
   print("\nSelecting closest Mobile Edge Computing (MEC) endpoint...")
   url = "https://5gedge.verizon.com/api/mec/eds/serviceendpoints?serviceEndpointsIds="+str(serviceEndpointsId)+"&UEIdentityType=IPAddress&UEIdentity="+str(UEIdentity)
+  # print(url)
   payload={}
   headers = {
     'Authorization': 'Bearer '+str(accessToken)
   }
   response = requests.request("GET", url, headers=headers, data=payload)
   output=response.json()
+  # print(output)
   closestEdgeZone=output["serviceEndpoints"][0]["ern"]
   print(f"Your Closest Edge Zone: {closestEdgeZone}")
   closestIP=output["serviceEndpoints"][0]["serviceEndpoint"]["IPv4Address"]
