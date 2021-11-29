@@ -10,6 +10,13 @@ To extend your first OpenShift cluster to AWS Wavelength, visit either of the fo
 
 * [Building your first Red Hat OpenShift cluster on Verizon 5G Edge (Verizon 5G Edge Blog)](https://verizon5gedgeblog.medium.com/building-your-first-red-hat-openshift-cluster-on-verizon-5g-edge-f9c2f07e8f20)
 
+## Preview: Architecture Overview
+In this architecture, you will define MachineSets for your Wavelength Zone(s) and Outpost(s), if appropriate, and OpenShift will instantiate Machines accordingly.
+
+<div align="center">
+<img src="img/hybrid-edge-machinesets.png" alt="edge-machineset">
+</div>
+
 ## Contributors
 This integration was made possible thanks to the Red Hat team: specifically Ashish Aggarwal and Vijay Chintalapati.
 
