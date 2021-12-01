@@ -1,3 +1,5 @@
+# Breakout Session Transcript
+
 Hello, my name is Elise Neel and I'm the SVP of New Business Incubation at Verizon. I'm here today with my colleague, Robbie Belson, who leads our developer relations efforts specifically for our mobile edge compute portfolio with AWS.
 
 Thanks, Elise. We're here today to showcase how Verizon is building smarter applications at the edge with Verizon 5G Edge and AWS Wavelength. And through the combination of Verizon 5G Ultra Wideband, AWS Wavelength and intelligent software, we want to show you firsthand how Verizon will be connecting and deploying aerial and ground robots for Industry 4.0 customers. Additionally, for those of you who wish to build these types of capabilities from scratch, we'll walk you through exactly how to do that, starting with the fundamentals.
