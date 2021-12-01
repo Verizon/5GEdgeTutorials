@@ -11,19 +11,10 @@ assert (
 
 WL_AZ = "us-west-2-wl1-phx-wlz-1"
 
-CARRIER_CLIENT_IPS = {"CidrIp": "174.205.0.0/16", "Description": "Carrier client IPs"}
-VERIZON_IP = {"CidrIp": "168.149.160.133/32", "Description": "Verizon IP"}
-
 SSH_PERMISSION = {
     "IpProtocol": "tcp",
     "FromPort": 22,
     "ToPort": 22,
-}
-
-IPERF_PERMISSION = {
-    "IpProtocol": "tcp",
-    "FromPort": 5001,
-    "ToPort": 5001,
 }
 
 ANY_IP_PERMISSION = {
@@ -52,7 +43,18 @@ iam_client = boto3.client("iam")
 
 
 @app.command()
-def deploy():
+def deploy(
+    iperf_port: int = typer.Option(
+        5001, help="Port to allow TCP and UDP traffic in for iperf"
+    ),
+    management_ips: str = typer.Argument(
+        ..., help="IPv4 CIDR addresses allowed to connect to the bastion host"
+    ),
+    wavelength_ips: str = typer.Option(
+        "174.205.0.0/16",
+        help="IPv4 CIDR addresses allowed to connect to the Wavelength host",
+    ),
+):
     # TODO: Unique VPC name (by timestamp?)
     # TODO: Tag VPC?
     typer.echo("Creating VPC")
@@ -90,17 +92,40 @@ def deploy():
     )
     carrier_route_table.associate_with_subnet(SubnetId=wl_subnet.id)
 
-    # TODO: Allow ICMP
-    # TODO: Allow UDP (iperf)
     typer.echo("Creating security groups")
+    wavelength_address_block = {
+        "CidrIp": wavelength_ips,
+        "Description": "Carrier-side IPs",
+    }
+    management_address_block = {
+        "CidrIp": management_ips,
+        "Description": "Management IPs",
+    }
+    icmp_permission = {
+        "IpProtocol": "icmp",
+        "FromPort": -1,
+        "ToPort": -1,
+        "IpRanges": [wavelength_address_block, management_address_block],
+    }
+    iperf_tcp_permission = {
+        "IpProtocol": "tcp",
+        "FromPort": iperf_port,
+        "ToPort": iperf_port,
+        "IpRanges": [wavelength_address_block, management_address_block],
+    }
+    iperf_udp_permission = iperf_tcp_permission | {"IpProtocol": "udp"}
+
     bastion_sg = ec2_resource.create_security_group(
         VpcId=vpc.id, GroupName="BastionSG", Description="Allow SSH and iperf in"
     )
     ec2_client.authorize_security_group_ingress(
         GroupId=bastion_sg.id,
         IpPermissions=[
-            SSH_PERMISSION | {"IpRanges": [CARRIER_CLIENT_IPS, VERIZON_IP]},
-            IPERF_PERMISSION | {"IpRanges": [CARRIER_CLIENT_IPS, VERIZON_IP]},
+            SSH_PERMISSION
+            | {"IpRanges": [wavelength_address_block, management_address_block]},
+            icmp_permission,
+            iperf_tcp_permission,
+            iperf_udp_permission,
         ],
     )
     ec2_client.authorize_security_group_egress(
@@ -115,10 +140,12 @@ def deploy():
         IpPermissions=[
             SSH_PERMISSION
             | {
-                "IpRanges": [CARRIER_CLIENT_IPS],
+                "IpRanges": [wavelength_address_block],
                 "UserIdGroupPairs": [{"GroupId": bastion_sg.id}],
             },
-            IPERF_PERMISSION | {"IpRanges": [CARRIER_CLIENT_IPS]},
+            icmp_permission,
+            iperf_tcp_permission,
+            iperf_udp_permission,
         ],
     )
     ec2_client.authorize_security_group_egress(
@@ -248,14 +275,6 @@ def get_vpc_by_name(name: str):
     raise typer.Exit(code=1)
 
 
-def get_vpc_instances(vpc_id: str):
-    response = ec2_client.describe_instances(
-        Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
-    )
-    instances = [reservation["Instances"] for reservation in response["Reservations"]]
-    return [instance for sublist in instances for instance in sublist]
-
-
 def get_vpc_nics(vpc_id: str):
     response = ec2_client.describe_network_interfaces(
         Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
@@ -311,8 +330,7 @@ def get_security_group_ids(vpc_id: str, include_default_sg=False):
 def teardown():
     vpc = get_vpc_by_name(VPC_NAME)
 
-    instances = get_vpc_instances(vpc.id)
-    instance_ids = [instance["InstanceId"] for instance in instances]
+    # instance_ids = [instance["InstanceId"] for instance in instances]
     # public_ips = list(
     #     filter(
     #         lambda ip: ip is not None,
@@ -320,24 +338,30 @@ def teardown():
     #     )
     # )
 
-    typer.echo("Terminating instances and waiting")
+    iam_instance_profile_arns = set()
+    instance_ids = []
+
+    typer.echo("Terminating instances")
     for instance in vpc.instances.all():
+        iam_instance_profile_arns.add(instance.iam_instance_profile["Arn"])
         addresses = ec2_client.describe_addresses(
             Filters=[{"Name": "instance-id", "Values": [instance.id]}]
-        )
+        )["Addresses"]
         for address in addresses:
             if "CarrierIp" in address:
                 typer.echo("  Releasing carrier IP")
                 ec2_client.disassociate_address(AssociationId=address["AssociationId"])
-                ec2_client.release_address(AllocationId=address["AllocationId"])
+                ec2_client.release_address(
+                    AllocationId=address["AllocationId"],
+                    NetworkBorderGroup=address["NetworkBorderGroup"],
+                )
         instance.terminate()
-        instance.wait_until_terminated()
+        instance_ids.append(instance.id)
 
-    # if instances:
-    #     # TODO: Find and release associated carrier IP
-    #     ec2_client.terminate_instances(InstanceIds=instance_ids)
-    #     waiter = ec2_client.get_waiter("instance_terminated")
-    #     waiter.wait(InstanceIds=instance_ids)
+    typer.echo("Waiting on instance terminations")
+    if instance_ids:
+        waiter = ec2_client.get_waiter("instance_terminated")
+        waiter.wait(InstanceIds=instance_ids)
 
     typer.echo("Deleting network interfaces")
     nic_ids = get_vpc_nics(vpc.id)
@@ -389,8 +413,30 @@ def teardown():
     typer.echo("Deleting VPC")
     vpc.delete()
 
-    # TODO: Delete IAM policies
-    # TODO: Delete IAM role
+    typer.echo("Deleting IAM instance profiles")
+    iam_role_names = set()
+    for instance_profile_arn in iam_instance_profile_arns:
+        instance_profile_name = instance_profile_arn.split("/")[-1]
+        instance_profile = iam_client.get_instance_profile(
+            InstanceProfileName=instance_profile_name
+        )["InstanceProfile"]
+        for role in instance_profile["Roles"]:
+            iam_role_names.add(role["RoleName"])
+            iam_client.remove_role_from_instance_profile(
+                InstanceProfileName=instance_profile_name, RoleName=role["RoleName"]
+            )
+        iam_client.delete_instance_profile(InstanceProfileName=instance_profile_name)
+
+    typer.echo("Deleting IAM roles")
+    for role_name in iam_role_names:
+        for policy in iam_client.list_attached_role_policies(RoleName=role_name)[
+            "AttachedPolicies"
+        ]:
+            iam_client.detach_role_policy(
+                RoleName=role_name, PolicyArn=policy["PolicyArn"]
+            )
+        iam_client.delete_role(RoleName=role_name)
+
     # TODO: Delete local key file
 
 
