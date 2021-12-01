@@ -9,8 +9,6 @@ assert (
     sys.version_info >= MIN_PYTHON
 ), f"requires Python {'.'.join([str(n) for n in MIN_PYTHON])} or newer"
 
-WL_AZ = "us-west-2-wl1-phx-wlz-1"
-
 SSH_PERMISSION = {
     "IpProtocol": "tcp",
     "FromPort": 22,
@@ -45,6 +43,11 @@ def deploy(
         "174.205.0.0/16",
         help="IPv4 CIDR addresses allowed to connect to the Wavelength host",
     ),
+    wl_zone_name: str = typer.Option(
+        "us-west-2-wl1-phx-wlz-1",
+        "--wavelength-zone",
+        help="Wavelength zone to deploy the Wavelength node into",
+    ),
     vpc_name: str = typer.Option(
         "wavelength-testing", "--vpc", help="Name for the VPC to create"
     ),
@@ -60,6 +63,9 @@ def deploy(
         "wl-testing-keypair",
         "--keypair",
         help="Name for the SSH keypair to create. (Existing keypair with this name will be DELETED.)",
+    ),
+    key_file: str = typer.Option(
+        "wl-testing.pem", help="Filename to use to save the SSH public key"
     ),
     bastion_type: str = typer.Option(
         "t2.micro", help="Machine type for the bastion host"
@@ -101,7 +107,7 @@ def deploy(
 
     typer.echo("Creating wavelength subnet")
     wl_subnet = ec2_resource.create_subnet(
-        CidrBlock="10.0.2.0/26", AvailabilityZone=WL_AZ, VpcId=vpc.id
+        CidrBlock="10.0.2.0/26", AvailabilityZone=wl_zone_name, VpcId=vpc.id
     )
     carrier_route_table.associate_with_subnet(SubnetId=wl_subnet.id)
 
@@ -170,7 +176,7 @@ def deploy(
     ec2_client.delete_key_pair(KeyName=keypair_name)
     keypair = ec2_client.create_key_pair(KeyName=keypair_name)
 
-    with open("boto-keypair.pem", "w") as private_key_file:
+    with open(key_file, "w") as private_key_file:
         private_key_file.write(keypair["KeyMaterial"])
     # TODO: Set file permissions
 
@@ -195,7 +201,9 @@ def deploy(
         UserData=user_data,
     )[0]
 
-    carrier_ip = ec2_client.allocate_address(Domain="vpc", NetworkBorderGroup=WL_AZ)
+    carrier_ip = ec2_client.allocate_address(
+        Domain="vpc", NetworkBorderGroup=wl_zone_name
+    )
     carrier_intf = ec2_client.create_network_interface(
         SubnetId=wl_subnet.id,
         Groups=[wl_sg.group_id],
@@ -218,7 +226,7 @@ def deploy(
                 "NetworkInterfaceId": carrier_intf_id,
             }
         ],
-        Placement={"AvailabilityZone": WL_AZ},
+        Placement={"AvailabilityZone": wl_zone_name},
         UserData=user_data,
     )[0]
 
@@ -269,7 +277,17 @@ def deploy(
         InstanceId=wavelength_instance.id,
     )
 
-    # TODO: Output access info (IPs, SSH commands, iperf commands?)
+    typer.secho("Done!", fg=typer.colors.GREEN)
+    bastion_instance.reload()
+    typer.echo("SSH to the bastion host:")
+    typer.secho(
+        f"    ssh -i {key_file} -o IdentitiesOnly=yes ec2-user@{bastion_instance.public_ip_address}",
+        bold=True,
+    )
+    typer.echo("iperf to the Wavelength node:")
+    typer.secho(
+        f"    iperf3 --client {carrier_ip['CarrierIp']} --port {iperf_port}", bold=True
+    )
 
 
 def get_vpc_by_name(name: str):
@@ -384,10 +402,6 @@ def teardown(
         vpc.detach_internet_gateway(InternetGatewayId=gw.id)
         gw.delete()
 
-    # typer.echo("Disassociating elastic IPs")
-    # for ip in public_ips:
-    #     ec2_client.disassociate_address(PublicIp=ip)
-
     typer.echo("Deleting carrier gateways")
     for carrier_gw_id in get_carrier_gw_ids(vpc.id):
         ec2_client.delete_carrier_gateway(CarrierGatewayId=carrier_gw_id)
@@ -449,6 +463,8 @@ def teardown(
         iam_client.delete_role(RoleName=role_name)
 
     # TODO: Delete local key file
+
+    typer.secho("Done!", fg=typer.colors.GREEN)
 
 
 if __name__ == "__main__":
