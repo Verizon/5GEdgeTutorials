@@ -24,17 +24,8 @@ ANY_IP_PERMISSION = {
     "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "Any IP"}],
 }
 
-# VZ_CENTOS7_AMI = "ami-0d2d88144bce4de9c"
 VZ_CENTOS7_AMI = "ami-0348652b6078c2c1d"
 AWS_CENTOS7_AMI = "ami-0348652b6078c2c1d"
-
-BASTION_INSTANCE_TYPE = "t3.medium"
-WAVELENGTH_INSTANCE_TYPE = "t3.medium"
-
-VPC_NAME = "wavelength-testing"
-EC2_INSTANCE_PROFILE_NAME = "botoInstanceProfile"
-IAM_ROLE_NAME = "botoRole"
-KEYPAIR_NAME = "boto-keypair"
 
 app = typer.Typer()
 ec2_client = boto3.client("ec2")
@@ -44,23 +35,45 @@ iam_client = boto3.client("iam")
 
 @app.command()
 def deploy(
-    iperf_port: int = typer.Option(
-        5001, help="Port to allow TCP and UDP traffic in for iperf"
-    ),
     management_ips: str = typer.Argument(
         ..., help="IPv4 CIDR addresses allowed to connect to the bastion host"
+    ),
+    iperf_port: int = typer.Option(
+        5001, help="Port to allow TCP and UDP traffic in for iperf"
     ),
     wavelength_ips: str = typer.Option(
         "174.205.0.0/16",
         help="IPv4 CIDR addresses allowed to connect to the Wavelength host",
     ),
+    vpc_name: str = typer.Option(
+        "wavelength-testing", "--vpc", help="Name for the VPC to create"
+    ),
+    instance_profile_name: str = typer.Option(
+        "wl-testing-profile",
+        "--instance-profile",
+        help="Name for the IAM instance profile to create",
+    ),
+    iam_role_name: str = typer.Option(
+        "wl-testing-role", "--iam-role", help="Name for the IAM role to create"
+    ),
+    keypair_name: str = typer.Option(
+        "wl-testing-keypair",
+        "--keypair",
+        help="Name for the SSH keypair to create. (Existing keypair with this name will be DELETED.)",
+    ),
+    bastion_type: str = typer.Option(
+        "t2.micro", help="Machine type for the bastion host"
+    ),
+    wavelength_type: str = typer.Option(
+        "t3.medium", help="Machine type for the Wavelength node"
+    ),
 ):
-    # TODO: Unique VPC name (by timestamp?)
-    # TODO: Tag VPC?
+    """
+    Create a test node in AWS Wavelength with iperf installed and running, an EC2 bastion host from which you can SSH into the Wavelegth node, and other AWS infrastructure to support them.
+    """
     typer.echo("Creating VPC")
     vpc = ec2_resource.create_vpc(CidrBlock="10.0.0.0/16")
-    vpc.create_tags(Tags=[{"Key": "Name", "Value": VPC_NAME}])
-    vpc.wait_until_exists()
+    vpc.create_tags(Tags=[{"Key": "Name", "Value": vpc_name}])
     vpc.wait_until_available()
 
     typer.echo("Creating internet gateway")
@@ -154,8 +167,8 @@ def deploy(
 
     typer.echo("Creating key pair")
     # We can't recover the old private key, so remove it
-    ec2_client.delete_key_pair(KeyName=KEYPAIR_NAME)
-    keypair = ec2_client.create_key_pair(KeyName=KEYPAIR_NAME)
+    ec2_client.delete_key_pair(KeyName=keypair_name)
+    keypair = ec2_client.create_key_pair(KeyName=keypair_name)
 
     with open("boto-keypair.pem", "w") as private_key_file:
         private_key_file.write(keypair["KeyMaterial"])
@@ -169,8 +182,8 @@ def deploy(
         MinCount=1,
         MaxCount=1,
         ImageId=VZ_CENTOS7_AMI,
-        InstanceType=BASTION_INSTANCE_TYPE,
-        KeyName=KEYPAIR_NAME,
+        InstanceType=bastion_type,
+        KeyName=keypair_name,
         NetworkInterfaces=[
             {
                 "DeviceIndex": 0,
@@ -197,8 +210,8 @@ def deploy(
         MinCount=1,
         MaxCount=1,
         ImageId=AWS_CENTOS7_AMI,
-        InstanceType=WAVELENGTH_INSTANCE_TYPE,
-        KeyName=KEYPAIR_NAME,
+        InstanceType=wavelength_type,
+        KeyName=keypair_name,
         NetworkInterfaces=[
             {
                 "DeviceIndex": 0,
@@ -224,37 +237,35 @@ def deploy(
             }
         )
         iam_client.create_role(
-            RoleName=IAM_ROLE_NAME, AssumeRolePolicyDocument=ec2_policy
+            RoleName=iam_role_name, AssumeRolePolicyDocument=ec2_policy
         )
     except iam_client.exceptions.EntityAlreadyExistsException:
         pass
 
     iam_client.attach_role_policy(
-        RoleName=IAM_ROLE_NAME,
+        RoleName=iam_role_name,
         PolicyArn="arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
     )
 
     try:
-        iam_client.create_instance_profile(
-            InstanceProfileName=EC2_INSTANCE_PROFILE_NAME
-        )
+        iam_client.create_instance_profile(InstanceProfileName=instance_profile_name)
     except iam_client.exceptions.EntityAlreadyExistsException:
         pass
 
     iam_client.add_role_to_instance_profile(
-        InstanceProfileName=EC2_INSTANCE_PROFILE_NAME, RoleName=IAM_ROLE_NAME
+        InstanceProfileName=instance_profile_name, RoleName=iam_role_name
     )
 
     typer.echo("Associating role")
     bastion_instance.wait_until_running()
     ec2_client.associate_iam_instance_profile(
-        IamInstanceProfile={"Name": EC2_INSTANCE_PROFILE_NAME},
+        IamInstanceProfile={"Name": instance_profile_name},
         InstanceId=bastion_instance.id,
     )
 
     wavelength_instance.wait_until_running()
     ec2_client.associate_iam_instance_profile(
-        IamInstanceProfile={"Name": EC2_INSTANCE_PROFILE_NAME},
+        IamInstanceProfile={"Name": instance_profile_name},
         InstanceId=wavelength_instance.id,
     )
 
@@ -327,23 +338,23 @@ def get_security_group_ids(vpc_id: str, include_default_sg=False):
 
 
 @app.command()
-def teardown():
-    vpc = get_vpc_by_name(VPC_NAME)
-
-    # instance_ids = [instance["InstanceId"] for instance in instances]
-    # public_ips = list(
-    #     filter(
-    #         lambda ip: ip is not None,
-    #         [get_carrier_ip_from_instance(instance) for instance in instances],
-    #     )
-    # )
+def teardown(
+    vpc_name: str = typer.Option(
+        "wavelength-testing", "--vpc", help="Name for the VPC to tear down"
+    ),
+):
+    """
+    Destroy the named VPC and related components (as created by the deploy command).
+    """
+    vpc = get_vpc_by_name(vpc_name)
 
     iam_instance_profile_arns = set()
     instance_ids = []
 
     typer.echo("Terminating instances")
     for instance in vpc.instances.all():
-        iam_instance_profile_arns.add(instance.iam_instance_profile["Arn"])
+        if instance.iam_instance_profile:
+            iam_instance_profile_arns.add(instance.iam_instance_profile["Arn"])
         addresses = ec2_client.describe_addresses(
             Filters=[{"Name": "instance-id", "Values": [instance.id]}]
         )["Addresses"]
