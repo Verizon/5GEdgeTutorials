@@ -18,30 +18,47 @@ These commands should be run through the aws cli (download here: https://docs.aw
 ![OpsCruise Deployment Guide AWS](./README_images/OpsCruise_DeploymentGuideAWS.png)
 
 6. Upload your opscruise-values.yaml to an S3 bucket and have the URL handy (you’ll need it in Step 7)
-7. Run the following commands:
+7. Run the commands below:
 
+# Commands to Run
 
-NOTE: The stack-name assumes linux for substitution. If substitution is not working, replace \$(date +%b%d%Y_%H%M) portion in the "--stack-name" parameter. Also, replace OpsCruiseValuesURL, EKSClusterAdminArn, and EKSClusterAdminArn ParameterValues with your actual values.
+## Clone the repository and move into the opscruise directory.
+
 
 ```
-## NOTE: Only run this command once. It creates IAM roles and activates the
-## AWSQS Helm and EKS Cluster Types, which only needs to be done once.
-## This outputs the Helm Role ARN. Use the ARN in the AWSQSHelmExecutionRole parameter.
+git clone https://github.com/Verizon/5GEdgeTutorials.git
+cd ./5GEdgeTutorials/opscruise
+```
 
+## Create IAM roles and activate Helm & EKS Types.
+
+
+You only need to run this next command once (but it's idempotent).
+
+```
 aws cloudformation deploy \
-    --template-file /Users/qcesarjr/vzw-wavelength-cf-templates/awsqseks-helm-typeactivation.yaml.packaged.yml \
+    --template-file ./awsqseks-helm-typeactivation.packaged.yaml \
     --stack-name AWSEKSTypeActivation \
     --capabilities CAPABILITY_NAMED_IAM
+```
 
-## To create additional clusters, only run the commands below.
 
-# Deploy the EKS Cluster in Wavelength with OpsCruise.
-# Change OpsCruiseValuesURL, EKSClusterAdminArn, EKSClusterAdminName,
-# and AWSQSHelmExecutionRole (output from first command) parameters
+## Deploy EKS Cluster in Wavelength with OpsCruise built-in.
 
+Make sure to change the **OpsCruiseValuesURL**, **EKSClusterAdminArn**, **EKSClusterAdminName**,
+and **AWSQSHelmExecutionRole** parameters
+
+- **OpsCruiseValuesURL** is an **S3** URL to your opscruise-values.yaml (must upload the file to an S3 bucket)
+- **EKSClusterAdminArn** is the ARN for the user you want to be an admin on the EKS Cluster
+- **EKSClusterAdminName** is the username for the EKS Cluster Admin (you can name it anything)
+- **AWSQSHelmExecutionRole** is the ARN from the previous command. Found in the CloudFormation outputs for the AWSEKSTypeActivation stack
+
+The last line updates your kubeconfig with the the new cluster's credentials and sets it as the active context.
+
+```
 EKSwOCStackName=eksCluster-wOpsCruise-$(date +%b%d%Y-%H%M)
 
-aws cloudformation deploy --template-file /Users/qcesarjr/vzw-wavelength-cf-templates/wavelength-eksCluster-withOpsCruise.packaged.yml \
+aws cloudformation deploy --template-file ./wavelength-eksCluster-withOpsCruise.packaged.yml \
     --stack-name $EKSwOCStackName \
     --capabilities CAPABILITY_NAMED_IAM \
     --parameter-overrides \
@@ -52,5 +69,5 @@ aws cloudformation deploy --template-file /Users/qcesarjr/vzw-wavelength-cf-temp
         OpsCruiseCollectorsVersion=3.1.1 \
         AWSQSHelmExecutionRole=$HELM_EXECUTION_ROLE
 
-# Update your kubeconfig with the created cluster's credentials
 aws eks update-kubeconfig --name ${EKSwOCStackName}-k8s
+```
