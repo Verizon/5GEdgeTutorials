@@ -1,6 +1,7 @@
 import boto3
 from botocore.exceptions import ClientError
 import json
+import os
 import sys
 import typer
 
@@ -178,7 +179,7 @@ def deploy(
 
     with open(key_file, "w") as private_key_file:
         private_key_file.write(keypair["KeyMaterial"])
-    # TODO: Set file permissions
+    os.chmod(key_file, 0o600)
 
     with open("scripts/iperf.sh") as user_data_file:
         user_data = user_data_file.read()
@@ -461,8 +462,6 @@ def teardown(
                 RoleName=role_name, PolicyArn=policy["PolicyArn"]
             )
         iam_client.delete_role(RoleName=role_name)
-
-    # TODO: Delete local key file
 
     typer.secho("Done!", fg=typer.colors.GREEN)
 
