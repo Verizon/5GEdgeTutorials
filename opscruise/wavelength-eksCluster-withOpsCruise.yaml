@@ -1,0 +1,416 @@
+## 5G Edge CloudFormation Template for EKS with OpsCruise Built-In
+## Authors: Robert Belson - Verizon 5G Edge Team, Cesar Quintana - OpsCruise Team
+Metadata:
+  License: Apache 2.0
+Description:  'This template creates an EKS Cluster with a Node Group in a Wavelength Zone.
+**WARNING** This template creates an EKS Cluster and EC2 instance. You will be billed for the AWS
+resources used if you create a stack from this template.'
+
+Parameters:
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.0.0.0/16
+
+  WavelengthZoneCIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the Wavelength Zone
+    Type: String
+    Default: 10.0.0.0/24
+
+  ParentRegionSubnetCIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the Parent Region
+    Type: String
+    Default: 10.0.1.0/24
+
+  ParentRegionSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the second public subnet in the Parent Region
+    Type: String
+    Default: 10.0.2.0/24
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access into the container instances
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: qcesarjr-MBP
+
+  WavelengthZoneGeo:
+    Type: String
+    Description: Enter a valid Wavelength Zone in the region. Please note the parent region of your selection must match the region of the other subnet you selected above.
+    Default: us-west-2-wl1-las-wlz-1
+    AllowedValues:
+      - us-east-1-wl1-bos-wlz-1
+      - us-east-1-wl1-atl-wlz-1
+      - us-east-1-wl1-was-wlz-1
+      - us-east-1-wl1-nyc-wlz-1
+      - us-east-1-wl1-mia-wlz-1
+      - us-east-1-wl1-dfw-wlz-1
+      - us-west-2-wl1-las-wlz-1
+      - us-west-2-wl1-sfo-wlz-1
+      - us-west-2-wl1-den-wlz-1
+      - us-west-2-wl1-sea-wlz-1
+
+  ParentRegionGeo:
+    Type: String
+    Description: Enter a valid Availability Zone in the region.
+    Default: us-west-2a 
+    AllowedValues:
+      - us-east-1a
+      - us-east-1b
+      - us-east-1c
+      - us-east-1d
+      - us-east-1e
+      - us-east-1f
+      - us-west-2a
+      - us-west-2b
+      - us-west-2c
+      - us-west-2d
+
+  ParentRegion2Geo:
+    Type: String
+    Description: Enter a second valid Availability Zone in the region.
+    Default: us-west-2b 
+    AllowedValues:
+      - us-east-1a
+      - us-east-1b
+      - us-east-1c
+      - us-east-1d
+      - us-east-1e
+      - us-east-1f
+      - us-west-2a
+      - us-west-2b
+      - us-west-2c
+      - us-west-2d
+
+  WavelengthInstanceType:
+    Type: String
+    Description: Enter a valid instance type for Wavelength infrastructure.
+    Default: t3.medium
+    AllowedValues:
+      - t3.medium
+      - t3.xlarge
+      - r5.2xlarge
+      - g4dn.2xlarge
+
+  AWSQSHelmExecutionRole:
+    Type: String
+    Description: The ARN of the Execution Role attached to the AWSQS::Kubernetes::Helm resource provider.
+    Default: ""
+
+  OpsCruiseValuesURL:
+    Type: String
+    Description: The s3 URL of the opscruise-values.yaml file.
+
+  OpsCruiseGWVersion:
+    Type: String
+    Description: The Helm package version for the OpsCruise Gateways
+
+  OpsCruiseCollectorsVersion:
+    Type: String
+    Description: The Helm package version for the OpsCruise Collectors
+
+  EKSClusterAdminArn:
+    Type: String
+    Description: The ARN of the admin user for the EKS Cluster.
+
+  EKSClusterAdminName:
+    Type: String
+    Description: The name of the admin user for the EKS Cluster.
+
+Mappings:
+  PartitionMap:
+    aws:
+      EC2ServicePrincipal: "ec2.amazonaws.com"
+    aws-us-gov:
+      EC2ServicePrincipal: "ec2.amazonaws.com"
+    aws-cn:
+      EC2ServicePrincipal: "ec2.amazonaws.com.cn"
+    aws-iso:
+      EC2ServicePrincipal: "ec2.c2s.ic.gov"
+    aws-iso-b:
+      EC2ServicePrincipal: "ec2.sc2s.sgov.gov"
+
+Resources:
+  # Start with single VPC in user-selected region
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}
+
+ # Carrier gateway access for carrier subnet in Wavelength Zone
+  CarrierGateway:
+    Type: AWS::EC2::CarrierGateway
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}
+
+  # Internet gateway access for public subnet in Availability Zone
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}"
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  # Subnets for VPC
+  AvailabilityZone1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref ParentRegionGeo
+      CidrBlock: !Ref ParentRegionSubnetCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Availability Zone
+  AvailabilityZone2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref ParentRegion2Geo
+      CidrBlock: !Ref ParentRegionSubnet2CIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Availability Zone 2
+  WavelengthZone1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref WavelengthZoneGeo
+      CidrBlock: !Ref WavelengthZoneCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Wavelength Zone
+
+  # Availability Zone Routing
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Parent Route Table
+  DefaultIGWRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref AvailabilityZone1
+  PublicRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref AvailabilityZone2
+
+  # Wavelength Zone Routing
+  CarrierRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} WLZ Route Table
+  DefaultCGWRoute:
+    Type: AWS::EC2::Route
+    DependsOn: CarrierGateway
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      CarrierGatewayId: !Ref CarrierGateway
+  CarrierRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      SubnetId: !Ref WavelengthZone1
+
+ # Security group for Node Group & Control Plane
+  ClusterSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: wl-sg
+      GroupDescription: Security group with HTTP/HTTPS access
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+        CidrIp: 0.0.0.0/0
+
+  # IAM Roles
+  EKSClusterRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-eks-cluster-role
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "eks.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+
+  NodeInstanceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - !FindInMap [PartitionMap, !Ref "AWS::Partition", EC2ServicePrincipal]
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonEKS_CNI_Policy"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+      Path: /
+  
+  # EKS Cluster
+  EKSCluster:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./nested-stacks/awsqs-eksclusters/ekscluster.yaml
+      Parameters:
+        EKSClusterName: !Sub "${AWS::StackName}-k8s"
+        ClusterSecurityGroup: !Ref ClusterSecurityGroup
+        SubnetIds: !Join
+          - ','
+          - - !Ref AvailabilityZone1
+            - !Ref AvailabilityZone2
+        EKSClusterRoleArn: !GetAtt EKSClusterRole.Arn
+        EKSClusterAdminArn: !Ref EKSClusterAdminArn
+        EKSClusterAdminName: !Ref EKSClusterAdminName
+        HelmExecutionRoleArn: !Ref AWSQSHelmExecutionRole
+        NodeInstanceRoleArn: !GetAtt NodeInstanceRole.Arn
+
+  # VPC Endpoints
+  S3GatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      RouteTableIds:
+         - !Ref CarrierRouteTable
+      ServiceName: !Sub
+        - com.amazonaws.${region}.s3
+        - { region: !Ref "AWS::Region" }
+      VpcId: !Ref VPC
+  EC2InterfaceEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub
+        - com.amazonaws.${region}.ec2
+        - { region: !Ref "AWS::Region" }
+      SecurityGroupIds:
+        - !Ref ClusterSecurityGroup
+      SubnetIds:
+        - !Ref AvailabilityZone1
+        - !Ref AvailabilityZone2
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      VpcId: !Ref VPC
+  ECRDKREndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      SecurityGroupIds:
+        - !Ref ClusterSecurityGroup
+      ServiceName: !Sub
+        - com.amazonaws.${region}.ecr.dkr
+        - { region: !Ref "AWS::Region" }
+      SubnetIds:
+        - !Ref AvailabilityZone1
+        - !Ref AvailabilityZone2
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      VpcId: !Ref VPC
+  ECRAPIEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      SecurityGroupIds:
+        - !Ref ClusterSecurityGroup
+      ServiceName: !Sub
+        - com.amazonaws.${region}.ecr.api
+        - { region: !Ref "AWS::Region" }
+      SubnetIds:
+        - !Ref AvailabilityZone1
+        - !Ref AvailabilityZone2
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      VpcId: !Ref VPC
+
+  # Node Group in Wavelenth Zone
+  EKSNodeGroup:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./nested-stacks/nodegroups/amazon-eks-nodegroup-parameterized-node-role.yaml 
+      Parameters:
+        ClusterControlPlaneSecurityGroup: !Ref ClusterSecurityGroup
+        NodeGroupName: Wavelength-Node-Group
+        KeyName: !Ref KeyName
+        Subnets: !Ref WavelengthZone1
+        ClusterName: !Sub "${AWS::StackName}-k8s"
+        VpcId: !Ref VPC
+        NodeAutoScalingGroupDesiredCapacity: 1
+        BootstrapArguments: !Join
+          - ' '
+          - - --apiserver-endpoint
+            - !GetAtt EKSCluster.Outputs.ClusterEndpoint
+            - --b64-cluster-ca
+            - !GetAtt EKSCluster.Outputs.ClusterCertAuthorityData
+            - --capabilities
+            - CAPABILITY_NAMED_IAM
+            - --kubelet-extra-args
+            - --node-labels=prometheus=yes
+        NodeInstanceRole: !Ref NodeInstanceRole
+
+  # OpsCruise
+  OpsCruiseComponents:
+    DependsOn: EKSNodeGroup
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: ./nested-stacks/opscruise-components/opscruise.yaml
+      Parameters:
+        ClusterID: !Sub "${AWS::StackName}-k8s"
+        OpsCruiseGWVersion: !Ref OpsCruiseGWVersion
+        OpsCruiseCollectorsVersion: !Ref OpsCruiseCollectorsVersion
+        ValueOverrideURL: !Ref OpsCruiseValuesURL
+
+Outputs:
+  # ClusterName:
+  #   Description: The API endpoint name of cluster
+  #   Value: !GetAtt EKSCluster.Endpoint
+  NodeGroupSG:
+    Description: The security group created for the node groups
+    Value: !GetAtt EKSNodeGroup.Outputs.NodeSecurityGroup
+  NodeInstanceRole:
+    Description: Cluster Node Instance Role for aws-auth-cm file update
+    Value: !GetAtt EKSNodeGroup.Outputs.NodeInstanceRole

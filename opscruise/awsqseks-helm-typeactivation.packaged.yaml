@@ -1,0 +1,40 @@
+Metadata:
+  License: Apache 2.0
+Description: This template creates an creates 2 IAM Roles, Activates the AWSQS EKS
+  and Helm Types, and associates each of the IAM roles to each type for execution.
+Resources:
+  AWSQSEKSExecutionRole:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-2.amazonaws.com/wl-opscruise-cf/ffc78859ceb8993c17dca458923420cd.template
+  AWSQSEKSTypeActivation:
+    Type: AWS::CloudFormation::TypeActivation
+    Properties:
+      AutoUpdate: true
+      ExecutionRoleArn:
+        Fn::GetAtt:
+        - AWSQSEKSExecutionRole
+        - Outputs.AWSQSEKSExecutionRoleArn
+      PublicTypeArn:
+        Fn::Sub: arn:aws:cloudformation:${AWS::Region}::type/resource/408988dff9e863704bcc72e7e13f8d645cee8311/AWSQS-EKS-Cluster
+  AWSQSHelmExecutionRole:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-2.amazonaws.com/wl-opscruise-cf/08c9005205cd73f3b93f93c495e3fb56.template
+  AWSQSHelmTypeActivation:
+    Type: AWS::CloudFormation::TypeActivation
+    Properties:
+      AutoUpdate: true
+      ExecutionRoleArn:
+        Fn::GetAtt:
+        - AWSQSHelmExecutionRole
+        - Outputs.HelmExecutionRoleArn
+      PublicTypeArn:
+        Fn::Sub: arn:aws:cloudformation:${AWS::Region}::type/resource/408988dff9e863704bcc72e7e13f8d645cee8311/AWSQS-Kubernetes-Helm
+Outputs:
+  AWSQSHelmTypeExecRoleArn:
+    Description: The ARN for the AWSQS Helm Role Type Execution
+    Value:
+      Fn::GetAtt:
+      - AWSQSHelmExecutionRole
+      - Outputs.HelmExecutionRoleArn

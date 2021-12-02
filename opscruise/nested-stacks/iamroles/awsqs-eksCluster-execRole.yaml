@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AWSQS-EKSCluster-ExecutionRole
+      MaxSessionDuration: 8400
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [resources.cloudformation.amazonaws.com, cloudformation.amazonaws.com, lambda.amazonaws.com]
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: ResourceTypePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "sts:GetCallerIdentity"
+                  - "eks:CreateCluster"
+                  - "eks:DeleteCluster"
+                  - "eks:DescribeCluster"
+                  - "eks:ListTagsForResource"
+                  - "eks:UpdateClusterVersion"
+                  - "eks:UpdateClusterConfig"
+                  - "eks:TagResource"
+                  - "eks:UntagResource"
+                  - "iam:PassRole"
+                  - "sts:AssumeRole"
+                  - "lambda:UpdateFunctionConfiguration"
+                  - "lambda:DeleteFunction"
+                  - "lambda:GetFunction"
+                  - "lambda:InvokeFunction"
+                  - "lambda:CreateFunction"
+                  - "lambda:UpdateFunctionCode"
+                  - "ec2:DescribeVpcs"
+                  - "ec2:DescribeSubnets"
+                  - "ec2:DescribeSecurityGroups"
+                  - "kms:CreateGrant"
+                  - "kms:DescribeKey"
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:DescribeLogGroups"
+                  - "logs:DescribeLogStreams"
+                  - "logs:PutLogEvents"
+                  - "cloudwatch:ListMetrics"
+                  - "cloudwatch:PutMetricData"
+                Resource: "*"
+Outputs:
+  AWSQSEKSExecutionRoleArn: 
+    Value: !GetAtt ExecutionRole.Arn
