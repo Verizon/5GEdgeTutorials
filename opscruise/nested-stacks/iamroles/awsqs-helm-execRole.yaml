@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  HelmExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "HelmExecutionRole"
+      MaxSessionDuration: 8400
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"  # required for EKS clusters with Public Endpoint disabled
+                - "resources.cloudformation.amazonaws.com"
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: ResourceTypePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "secretsmanager:GetSecretValue"  # required for deploying helm charts into non-EKS kubernetes clusters
+                  - "kms:Decrypt"
+                  - "eks:DescribeCluster"
+                  - "s3:GetObject"
+                  - "sts:AssumeRole"
+                  - "iam:PassRole"  # required for EKS clusters with Public Endpoint disabled
+                  - "ec2:CreateNetworkInterface"  # required for EKS clusters with Public Endpoint disabled
+                  - "ec2:DescribeNetworkInterfaces"  # required for EKS clusters with Public Endpoint disabled
+                  - "ec2:DeleteNetworkInterface"  # required for EKS clusters with Public Endpoint disabled
+                  - "ec2:DescribeVpcs"  # required for EKS clusters with Public Endpoint disabled
+                  - "ec2:DescribeSubnets"  # required for EKS clusters with Public Endpoint disabled
+                  - "ec2:DescribeRouteTables"  # required for EKS clusters with Public Endpoint disabled
+                  - "ec2:DescribeSecurityGroups"  # required for EKS clusters with Public Endpoint disabled
+                  - "logs:CreateLogGroup"  # required for EKS clusters with Public Endpoint disabled
+                  - "logs:CreateLogStream"  # required for EKS clusters with Public Endpoint disabled
+                  - "logs:PutLogEvents"  # required for EKS clusters with Public Endpoint disabled
+                  - "lambda:UpdateFunctionConfiguration"  # required for EKS clusters with Public Endpoint disabled
+                  - "lambda:DeleteFunction"  # required for EKS clusters with Public Endpoint disabled
+                  - "lambda:GetFunction"  # required for EKS clusters with Public Endpoint disabled
+                  - "lambda:InvokeFunction"  # required for EKS clusters with Public Endpoint disabled
+                  - "lambda:CreateFunction"  # required for EKS clusters with Public Endpoint disabled
+                  - "lambda:UpdateFunctionCode"  # required for EKS clusters with Public Endpoint disabled
+                  - "cloudformation:ListExports"  # required for fetching contract test inputs
+                  - "ecr:GetAuthorizationToken" # required for fetching charts from ECR
+                  - "ecr:BatchCheckLayerAvailability" # required for fetching charts from ECR
+                  - "ecr:GetDownloadUrlForLayer" # required for fetching charts from ECR
+                  - "ecr:BatchGetImage" # required for fetching charts from ECR
+                Resource: "*"
+Outputs:
+  HelmExecutionRoleArn:
+    Value: !GetAtt HelmExecutionRole.Arn

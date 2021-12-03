@@ -1,0 +1,54 @@
+## 5G Edge CloudFormation Template for EKS with OpsCruise Built-In
+## Authors: Cesar Quintana - OpsCruise https://opscruise.com
+Metadata:
+  License: Apache 2.0
+Description:  'This template deploys the OpsCruise components, mainly the OpsCruise Gateways and the Open Source collection pieces,
+including Prometheus, cAdvisor, Node Exporter, Kube State Metrics, and Loki'
+
+Parameters:
+  ClusterID:
+    Description: The ID of the Kubernetes cluster
+    Type: String
+
+  OpsCruiseGWVersion:
+    Description: The Helm package version for the OpsCruise Gateways
+    Type: String
+  
+  OpsCruiseCollectorsVersion:
+    Description: The Helm package version for the OpsCruise Collectors
+    Type: String
+  
+  ValueOverrideURL:
+    Description: The s3 URL of the opscruise-values.yaml file.
+    Type: String
+
+Resources:
+  OpsCruiseGateways:
+    Type: "AWSQS::Kubernetes::Helm"
+    Properties:
+      ClusterID: !Ref ClusterID
+      Name: opscruise-bundle
+      Namespace: opscruise
+      Repository: https://opscruise-helm.bitbucket.io
+      Chart: oc-repo/opscruise
+      Version: !Ref OpsCruiseGWVersion
+      TimeOut: 6
+      Values:
+        tags.collectors: "false"
+        gcpgw.enabled: "false"
+        azuregw.enabled: "false"
+      ValueOverrideURL: !Ref ValueOverrideURL
+
+  OpsCruiseCollectors:
+    Type: "AWSQS::Kubernetes::Helm"
+    Properties:
+      ClusterID: !Ref ClusterID
+      Name: opscruise-bundle
+      Namespace: collectors
+      Repository: https://opscruise-helm.bitbucket.io
+      Chart: oc-repo/opscruise
+      Version: !Ref OpsCruiseCollectorsVersion
+      TimeOut: 5
+      Values:
+        tags.opscruise: false
+      ValueOverrideURL: !Ref ValueOverrideURL

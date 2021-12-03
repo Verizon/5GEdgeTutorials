@@ -1,0 +1,74 @@
+## 5G Edge CloudFormation Template for creating an AWS Quick Start EKS Cluster
+## Author: Cesar Quintana - https://opscruise.com
+Metadata:
+  License: Apache 2.0
+Description:  'This template creates an AWS QuickStart EKS Cluster.
+**WARNING** This template creates an EKS Cluster. You will be billed for the AWS
+resources used if you create a stack from this template.'
+
+Parameters:
+  EKSClusterName:
+    Description: Name of the EKS Cluster
+    Type: String
+
+  ClusterSecurityGroup:
+    Description: SecurityGroup ID of the EKS Cluster Security Group
+    Type: String
+
+  SubnetIds:
+    Description: Comma-delimited list of subnet IDs for the EKS Cluster
+    Type: CommaDelimitedList
+
+  EKSClusterRoleArn:
+    Description: The EKS Cluster Role ARN
+    Type: String
+
+  EKSClusterAdminArn:
+    Description: The ARN for the Cluster admin role
+    Type: String
+  
+  EKSClusterAdminName:
+    Description: The user name for the Cluster admin role
+    Type: String
+
+  HelmExecutionRoleArn:
+    Description: The ARN for the Helm Execution role
+    Type: String
+
+  NodeInstanceRoleArn:
+    Description: The ARN for the Worker Node Instance role
+    Type: String
+
+Resources:
+  EKSCluster:
+    Type: AWSQS::EKS::Cluster
+    Properties:
+      Name: !Ref EKSClusterName
+      ResourcesVpcConfig:
+        SecurityGroupIds:
+          - !Ref ClusterSecurityGroup
+        SubnetIds: !Ref SubnetIds
+      RoleArn: !Ref EKSClusterRoleArn
+      KubernetesApiAccess:
+        Users:
+          - Arn: !Ref EKSClusterAdminArn
+            Username: !Ref EKSClusterAdminName
+            Groups: ["system:masters"]
+        Roles:
+          - Arn: !Ref HelmExecutionRoleArn
+            Username: "AWSQSHelmExecutionRole"
+            Groups: ["system:masters"]
+          - Arn: !Ref NodeInstanceRoleArn
+            Username: system:node:{{EC2PrivateDNSName}}
+            Groups:
+              - system:bootstrappers
+              - system:nodes
+
+Outputs:
+  ClusterEndpoint:
+    Description: The API endpoint name of cluster
+    Value: !GetAtt EKSCluster.Endpoint
+  
+  ClusterCertAuthorityData:
+    Description: Byte64-encoded cluster CA data
+    Value: !GetAtt EKSCluster.CertificateAuthorityData

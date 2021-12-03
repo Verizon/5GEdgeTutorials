@@ -1,0 +1,37 @@
+## Authors: Cesar Quintana - OpsCruise Team https://opscruise.com
+Metadata:
+  License: Apache 2.0
+Description:  'This template creates an creates 2 IAM Roles, Activates the AWSQS EKS and Helm Types,
+and associates each of the IAM roles to each type for execution.'
+
+Resources:
+  # AWSQS EKS Cluster Resource Execution Role and Type Activation
+  AWSQSEKSExecutionRole:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./nested-stacks/iamroles/awsqs-eksCluster-execRole.yaml
+
+  AWSQSEKSTypeActivation: 
+    Type: AWS::CloudFormation::TypeActivation
+    Properties: 
+      AutoUpdate: true
+      ExecutionRoleArn: !GetAtt AWSQSEKSExecutionRole.Outputs.AWSQSEKSExecutionRoleArn
+      PublicTypeArn: !Sub 'arn:aws:cloudformation:${AWS::Region}::type/resource/408988dff9e863704bcc72e7e13f8d645cee8311/AWSQS-EKS-Cluster'
+
+  # AWSQS Helm Command Resource Execution Role and Type Activation
+  AWSQSHelmExecutionRole:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./nested-stacks/iamroles/awsqs-helm-execRole.yaml
+
+  AWSQSHelmTypeActivation: 
+    Type: AWS::CloudFormation::TypeActivation
+    Properties:
+      AutoUpdate: true
+      ExecutionRoleArn: !GetAtt AWSQSHelmExecutionRole.Outputs.HelmExecutionRoleArn
+      PublicTypeArn: !Sub 'arn:aws:cloudformation:${AWS::Region}::type/resource/408988dff9e863704bcc72e7e13f8d645cee8311/AWSQS-Kubernetes-Helm'
+
+Outputs:
+  AWSQSHelmTypeExecRoleArn:
+    Description: The ARN for the AWSQS Helm Role Type Execution
+    Value: !GetAtt AWSQSHelmExecutionRole.Outputs.HelmExecutionRoleArn
