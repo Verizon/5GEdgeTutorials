@@ -38,17 +38,13 @@ Fill out all the fields to enable the “Activate” button. Once completed, cli
 
 At this point, another window will appear but click on the upper right corner to close this out, as for now, we are setting up the initial collection using the upcoming CloudFormation Template.
 
-
-![alt_text](images/image4.png "image_tooltip")
-
-
 After you hit the “x”, you will see the following screen:
 
- 
 
-At this point, we need to set up an API key so that the AWS CloudFormation Template can set up some collection and Dashboards in the account.
+ ![alt_text](images/image4.png "image_tooltip")
 
- 
+
+At this point, we need to set up an API key so that the AWS CloudFormation Template can set up some collection and Dashboards in the account. 
 
 On the left column, click on your username, and then preferences:
 
@@ -89,48 +85,40 @@ To start, let’s use CloudFormation to instantiate our Verizon 5G Edge environm
 * Attached to the VPC includes an Internet Gateway for our Availability Zone and a Carrier Gateway for the Wavelength Zone. Note that a Carrier Gateway has similar characteristics to an Internet Gateway but is used specifically in Wavelength Zone for NAT between private IP addresses and Carrier IP addresses -- those addresses allocated to Verizon-facing "public" endpoints. To learn more about the Carrier Gateway, visit the[ developer guide.](https://docs.aws.amazon.com/wavelength/latest/developerguide/aws-wavelength-developer-guide.pdf)
 * Sets up 1 EC2 instance in each subnet with the Sumo Logic collector already installed and configured to send host based metrics and OS Logs to the Sumo Service.
 
- 
-
 To get started, pull down the GitHub repository with our CloudFormation template and navigate to the directory.
 
  
-
+```
 git clone[ https://github.com/Verizon/5GEdgeTutorials.git](https://github.com/Verizon/5GEdgeTutorials.git)
-
 cd sumologic-tutorial/
-
+```
  
 
 Next, run the AWS CLI to create your CloudFormation Stack. For the Stack to create successfully, be sure to change 3 values:
 
+**`<your-key-pair>`** - Change this value to any existing AWS EC2 key pair you have in that region
 
-    **<your-key-pair>:** change this value to any existing AWS EC2 key pair you have in that region
+**`<your-sumo-access-id>`** - Use your access ID you retrieved from the Sumo Logic console earlier
 
-
-    **<your-sumo-access-id>:** use your access ID you retrieved from the Sumo Logic console earlier
-
-
-    **<your-sumo-access-key>: **use your access key you retrieved from the Sumo Logic console earlier
+**`<your-sumo-access-key>`** - Use your access key you retrieved from the Sumo Logic console earlier
 
  
-
+```
 aws cloudformation create-stack --stack-name sumologic --template-body file://demo-instrumentation-environment.yaml \
-
 --parameters ParameterKey=EnvironmentName,ParameterValue=SumoLogic ParameterKey=KeyName,ParameterValue=&lt;your-key-pair> ParameterKey=SumoAccessId,ParameterValue=&lt;your-sumo-access-id> ParameterKey=SumoAccessKey,ParameterValue=&lt;your-sumo-access-key> \
-
 --capabilities CAPABILITY_IAM
-
+```
  
 
 After successful launch, you should see the AWS CLI return back the Amazon resource name (ARN) of the stack itself.
 
-
+```
 {
 
 	"StackId": "arn:aws:cloudformation:us-east-1:<your_account>:stack/sumologic/<uuid>"
 
 }
-
+```
  
 
  
@@ -142,15 +130,10 @@ After successful launch, you should see the AWS CLI return back the Amazon resou
 
 Now that the Cloud Formation template has completed, wait a few minutes for everything to finish starting up and registering.
 
- 
 
 If you go to your Sumo Logic Account, and open the “Manage Data” → “Collection” page, you can see that there are two Installed collectors and they are configured to send in the Host Metrics for each Collector.
 
- 
-
 If you look on the left side at the top in the “Personal” Folder (the folder with the icon of a person in it) and you open it, you should see a dashboard labeled: Host Metrics (EC2).
-
- 
 
 If you double click on one of the dashboards in the list (for example “1: AWS EC2 Metrics - Summary”), you will open up a dashboard showing a variety of collected metrics about both of the Linux servers. You can use the filters at the top of the dashboard to focus on just the server in the 5G Edge or just the server in the Availability Zone.
 
