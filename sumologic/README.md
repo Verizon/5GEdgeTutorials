@@ -19,19 +19,10 @@ The systems deployed in AWS will be deployed using a CloudFormation Template. Th
 **Getting Started with Sumo Logic**
 
 
-Before setting up anything in the 5G Edge environment, we need to have a place to which we send the data. That place is a Sumo Logic account. If you don't have a Sumo Logic account, signup for a free trial [here.](https://www.sumologic.com/sign-up/) ~~This will open up a dialog box where you enter your email address and geographic region. Most users should select “North America” for the region. After filling in both fields (and the 2 check boxes below them (SLA and opt-in for communication), select “Sign up” to receive an Email that will have the info you need to start up your Sumo Logic account and prep for the communications for our automated example.~~
-
-
-
-<p id="gdcalert1" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image1.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert2">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
+Before setting up anything in the 5G Edge environment, we need to have a place to which we send the data. That place is a Sumo Logic account. If you don't have a Sumo Logic account, signup for a free trial [here.](https://www.sumologic.com/sign-up/)
 
 
 ![alt_text](images/image1.png "image_tooltip")
-
-
-
-
-<p id="gdcalert2" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image2.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert3">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
 ![alt_text](images/image2.png "image_tooltip")
@@ -40,22 +31,12 @@ Before setting up anything in the 5G Edge environment, we need to have a place t
 Check your email, and click on the link to start with Sumo Logic. Once you click on the email link, you will be brought to the following page inside Sumo Logic. Fill out the fields on the page, then activate your account.
 
 
-
-<p id="gdcalert3" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image3.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert4">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
 ![alt_text](images/image3.png "image_tooltip")
 
 
 Fill out all the fields to enable the “Activate” button. Once completed, click “Activate”.
 
 At this point, another window will appear but click on the upper right corner to close this out, as for now, we are setting up the initial collection using the upcoming CloudFormation Template.
-
- 
-
-
-
-<p id="gdcalert4" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image4.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert5">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
 ![alt_text](images/image4.png "image_tooltip")
@@ -71,57 +52,29 @@ At this point, we need to set up an API key so that the AWS CloudFormation Templ
 
 On the left column, click on your username, and then preferences:
 
- 
-
-
-
-<p id="gdcalert5" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image5.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert6">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
 
 ![alt_text](images/image5.png "image_tooltip")
 
 
 On the preferences page, in the middle, click on the “Add Access Key” button.
 
- 
-
-<p id="gdcalert6" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image6.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert7">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
 
 ![alt_text](images/image6.png "image_tooltip")
-
-
  
 
 That will open a dialog box to fill in the name of the access key you are creating. Go ahead and give it any name then hit the “Create Key” button. In this example we used 5GEdge:
-
- 
-
-<p id="gdcalert7" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image7.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert8">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
 ![alt_text](images/image7.png "image_tooltip")
 
 
- 
-
 Once you hit “Create,” another dialog box opens showing the Access ID and the Access Key. Make sure that you copy BOTH of the values and store them securely before hitting the “Done” box. The Access Key value is only visible at this time and will no longer be visible once “Done” is pressed. These two entities (Access ID and Access Key) will be needed when configuring the CloudFormation Template.
-
- 
-
-<p id="gdcalert8" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image8.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert9">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
 ![alt_text](images/image8.png "image_tooltip")
 
 
- 
-
 Once you have the Key and ID, it is time to go over to AWS and deploy the CloudFormation Template.
-
- 
-
- 
 
 
 ### Getting started on 5G Edge
@@ -130,7 +83,6 @@ Once you have the Key and ID, it is time to go over to AWS and deploy the CloudF
 #### Launch Your CloudFormation Template
 
 To start, let’s use CloudFormation to instantiate our Verizon 5G Edge environment with AWS Wavelength. To showcase how Sumo Logic can seamlessly filter between edge and parent-region nodes we developed the following infrastructure example:
-
 
 
 * Single VPC in a region of your choice (i.e., us-east-1 or us-west-2) with 2 subnets: 1 in a traditional Availability Zone (e.g., us-east-1a) and 1 in a Wavelength Zone (e.g., us-east-1-wl1-nyc-wlz-1)
@@ -152,13 +104,13 @@ cd sumologic-tutorial/
 Next, run the AWS CLI to create your CloudFormation Stack. For the Stack to create successfully, be sure to change 3 values:
 
 
-    **&lt;your-key-pair>:** change this value to any existing AWS EC2 key pair you have in that region
+    **<your-key-pair>:** change this value to any existing AWS EC2 key pair you have in that region
 
 
-    **&lt;your-sumo-access-id>:** use your access ID you retrieved from the Sumo Logic console earlier
+    **<your-sumo-access-id>:** use your access ID you retrieved from the Sumo Logic console earlier
 
 
-    **&lt;your-sumo-access-key>: **use your access key you retrieved from the Sumo Logic console earlier
+    **<your-sumo-access-key>: **use your access key you retrieved from the Sumo Logic console earlier
 
  
 
@@ -172,11 +124,10 @@ aws cloudformation create-stack --stack-name sumologic --template-body file://de
 
 After successful launch, you should see the AWS CLI return back the Amazon resource name (ARN) of the stack itself.
 
- 
 
 {
 
-	"StackId": "arn:aws:cloudformation:us-east-1:&lt;your_account>:stack/sumologic/&lt;uuid>"
+	"StackId": "arn:aws:cloudformation:us-east-1:<your_account>:stack/sumologic/<uuid>"
 
 }
 
@@ -204,41 +155,20 @@ If you look on the left side at the top in the “Personal” Folder (the folder
 If you double click on one of the dashboards in the list (for example “1: AWS EC2 Metrics - Summary”), you will open up a dashboard showing a variety of collected metrics about both of the Linux servers. You can use the filters at the top of the dashboard to focus on just the server in the 5G Edge or just the server in the Availability Zone.
 
 
-
-<p id="gdcalert9" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image9.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert10">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
 ![alt_text](images/image9.png "image_tooltip")
  
 
- 
-
-
 #### Viewing log data:
-
- 
 
 To view log data using dashboards specific to Linux log messages, you can install the “Linux - Cloud Security Monitoring and Analytics” App from the App Catalog.
 
- 
-
 On the left-hand menu, click on App Catalog and search for Linux to see the Linux-specific apps.
-
-
-
-<p id="gdcalert10" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image10.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert11">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
 ![alt_text](images/image10.png "image_tooltip")
  
 
- 
-
 Select the “Linux - Cloud Security Monitoring and Analytics” app, and then click “Add to Library”
-
-
-
-<p id="gdcalert11" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image11.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert12">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
 ![alt_text](images/image11.png "image_tooltip")
@@ -247,20 +177,10 @@ Select the “Linux - Cloud Security Monitoring and Analytics” app, and then c
 Another dialog box will open. On that Dialog box, click on the Source Category on the lower right side and select “OS_messages” from the Drop Down.
 
 
-
-<p id="gdcalert12" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image12.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert13">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
 ![alt_text](images/image12.png "image_tooltip")
 
 
- 
-
 You will be taken to the Folder Tab to see what was just installed:
-
-
-
-<p id="gdcalert13" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image13.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert14">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
 ![alt_text](images/image13.png "image_tooltip")
