@@ -1,0 +1,372 @@
+##5G Edge CloudFormation Template for multi-subnet VPC | Author: Robert Belson, Verizon 5G Edge Team
+Metadata:
+  License: Apache 2.0
+Description:  'This template creates two EC2 instances across a Wavelength Zone and Availability Zone in the parent region.
+**WARNING** This template creates EC2 instances. You will be billed for the AWS
+resources used if you create a stack from this template.'
+
+Parameters:
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+
+  SumoAccessId:
+    Description: Your Sumo Logic Access ID
+    Type: String
+    Default: suDHVIBaaoXeaB
+
+  SumoAccessKey:
+    Description: Your Sumo Logic Access Key
+    Type: String
+    Default: faDgdVDthZkh9OUXUxIrsw2KmruyZeXKyuxmTbRz5ral955IqFNqU08sHtSdCSiy
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.0.0.0/16
+
+  WavelengthZoneCIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the Wavelength Zone
+    Type: String
+    Default: 10.0.0.0/24
+
+  ParentRegionSubnetCIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the Parent Region
+    Type: String
+    Default: 10.0.1.0/24
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access into the container instances
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: test_key
+
+  WavelengthZoneGeo:
+    Type: String
+    Description: Enter a valid Wavelength Zone in the region. Please note the parent region of your selection must match the region of the other subnet you selected above.
+    Default: us-east-1-wl1-bos-wlz-1
+    AllowedValues:
+      - us-east-1-wl1-bos-wlz-1
+      - us-east-1-wl1-atl-wlz-1
+      - us-east-1-wl1-was-wlz-1
+      - us-east-1-wl1-nyc-wlz-1
+      - us-east-1-wl1-mia-wlz-1
+      - us-east-1-wl1-dfw-wlz-1
+      - us-west-2-wl1-las-wlz-1
+      - us-west-2-wl1-sfo-wlz-1
+      - us-west-2-wl1-den-wlz-1
+      - us-west-2-wl1-sea-wlz-1
+
+  ParentRegionGeo:
+    Type: String
+    Description: Enter a valid Availability Zone in the region.
+    Default: us-east-1a
+    AllowedValues:
+      - us-east-1a
+      - us-east-1b
+      - us-east-1c
+      - us-east-1d
+      - us-east-1e
+      - us-east-1f
+      - us-west-2a
+      - us-west-2b
+      - us-west-2c
+      - us-west-2d
+
+  WavelengthInstanceType:
+    Type: String
+    Description: Enter a valid instance type for Wavelength infrastructure.
+    Default: t3.medium
+    AllowedValues:
+      - t3.medium
+      - t3.xlarge
+      - r5.2xlarge
+      - g4dn.2xlarge
+Mappings:
+  RegionMap:
+    us-east-1:
+      HVM64: ami-04d29b6f966df1537
+    us-west-2:
+      HVM64: ami-0e472933a1395e172
+
+Resources:
+  #Start with single VPC in user-selected region
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+ #Carrier gateway access for carrier subnet in Wavelength Zone
+  CarrierGateway:
+    Type: AWS::EC2::CarrierGateway
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+  #Internet gateway access for public subnet in Availability Zone
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  #Subnets for VPC
+  AvailabilityZone:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref ParentRegionGeo
+      CidrBlock: !Ref ParentRegionSubnetCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Availability Zone
+  WavelengthZone:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref WavelengthZoneGeo
+      CidrBlock: !Ref WavelengthZoneCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Wavelength Zone
+
+  #Availability Zone Routing
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Parent Route Table
+  DefaultIGWRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref AvailabilityZone
+  #Wavelength Zone Routing
+  CarrierRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WLZ Route Table
+  DefaultCGWRoute:
+    Type: AWS::EC2::Route
+    DependsOn: CarrierGateway
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      CarrierGatewayId: !Ref CarrierGateway
+  CarrierRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      SubnetId: !Ref WavelengthZone
+
+  SSMIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+  SSMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref SSMIAMRole
+
+  WLSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: edge-sg
+      GroupDescription: Security group for Wavelength zone
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+
+  ParentSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: parent-sg
+      GroupDescription: Security group for Parent Region
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+
+  # Autoscaling group for EC2 instances
+  AutoScalingGroupEdge:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      Tags:
+        - Key: "Edge"
+          Value: "true"
+          PropagateAtLaunch: true
+      VPCZoneIdentifier:
+        - !Ref WavelengthZone
+      LaunchTemplate:
+        LaunchTemplateId: !Ref 'WLLaunchTemplate'
+        Version: 1
+      MinSize: '1'
+      MaxSize: '1'
+      DesiredCapacity: '1'
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: 'true'
+
+  WLLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub '${AWS::StackName}-launch-template-for-auto-scaling'
+      LaunchTemplateData:
+        BlockDeviceMappings:
+        - DeviceName: /dev/sdh
+          Ebs:
+            VolumeSize: 50
+            VolumeType: gp2
+            DeleteOnTermination: true
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            AssociateCarrierIpAddress: true
+            Groups:
+              - !Ref 'WLSecurityGroup'
+            DeleteOnTermination: true
+        ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", HVM64]
+        InstanceType: !Ref 'WavelengthInstanceType'
+        IamInstanceProfile:
+          Name: !Ref 'SSMInstanceProfile'
+        KeyName: !Ref 'KeyName'
+        UserData:
+          Fn::Base64:
+            !Sub |
+              #!/bin/bash -xe
+              sudo yum update -y
+              sudo yum install wget -y
+              wget "https://collectors.sumologic.com/rest/download/linux/64" -O SumoCollector.sh && chmod +x SumoCollector.sh
+              wget https://wavelengthtutorials.s3.amazonaws.com/linux-metric-source.json
+              sudo ./SumoCollector.sh -q -Vsumo.accessid=${SumoAccessId} -Vsumo.accesskey=${SumoAccessKey} -Vsources=/linux-metric-source.json
+
+
+
+
+  ParentInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !GetAtt AvailabilityZone.AvailabilityZone
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          AssociatePublicIpAddress: true
+          SubnetId: !Ref AvailabilityZone
+          GroupSet:
+            - !Ref 'ParentSecurityGroup'
+      # IamInstanceProfile: AmazonSSMRoleForInstancesQuickSetup
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", HVM64]
+      InstanceType: !Ref WavelengthInstanceType
+      KeyName: !Ref 'KeyName'
+      IamInstanceProfile: !Ref 'SSMInstanceProfile'
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            sudo yum update -y
+            sudo yum install wget -y
+            wget "https://collectors.sumologic.com/rest/download/linux/64" -O SumoCollector.sh && chmod +x SumoCollector.sh
+            wget https://wavelengthtutorials.s3.amazonaws.com/linux-metric-source.json
+            sudo ./SumoCollector.sh -q -Vsumo.accessid=${SumoAccessId} -Vsumo.accesskey=${SumoAccessKey} -Vsources=/linux-metric-source.json
+            wget https://wavelengthtutorials.s3.amazonaws.com/dashboards.json
+            https://wavelengthtutorials.s3.amazonaws.com/loaddash.py
+            https://wavelengthtutorials.s3.amazonaws.com/sumo_shared.py
+            sudo yum install -y python3-pip
+            sudo pip3 install requests
+            SUMO_ACCESS_ID={SumoAccessId}
+            SUMO_ACCESS_KEY={SumoAccessKey}
+            sudo python3 loaddash.py
+      Tags:
+        - Key: Edge
+          Value: false
+
+Outputs:
+  VPC:
+    Description: A reference to the created VPC
+    Value: !Ref VPC

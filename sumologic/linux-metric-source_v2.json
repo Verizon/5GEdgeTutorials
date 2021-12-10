@@ -1,0 +1,37 @@
+{
+  "api.version":"v1",
+  "sources":[{
+    "name":"messages",
+    "category":"OS_messages",
+    "automaticDateParsing":true,
+    "multilineProcessingEnabled":true,
+    "useAutolineMatching":true,
+    "forceTimeZone":false,
+    "filters":[],
+    "cutoffTimestamp":1629759377095,
+    "encoding":"UTF-8",
+    "fields":{
+
+    },
+    "denylist":[],
+    "pathExpression":"/var/log/*",
+    "sourceType":"LocalFile"
+  },{
+    "name":"Sample Metrics",
+    "category":"EC2/Metrics",
+    "automaticDateParsing":false,
+    "multilineProcessingEnabled":false,
+    "useAutolineMatching":false,
+    "contentType":"HostMetrics",
+    "forceTimeZone":false,
+    "filters":[],
+    "cutoffTimestamp":0,
+    "encoding":"UTF-8",
+    "fields":{
+
+    },
+    "interval":60000,
+    "metrics":["CPU_User","CPU_Sys","CPU_Nice","CPU_Idle","CPU_IOWait","CPU_Irq","CPU_SoftIrq","CPU_Stolen","CPU_LoadAvg_1min","CPU_LoadAvg_5min","CPU_LoadAvg_15min","CPU_Total","Mem_Total","Mem_Used","Mem_Free","Mem_ActualFree","Mem_ActualUsed","Mem_UsedPercent","Mem_FreePercent","Mem_PhysicalRam","TCP_InboundTotal","TCP_OutboundTotal","TCP_Established","TCP_Listen","TCP_Idle","TCP_Closing","TCP_CloseWait","TCP_Close","TCP_TimeWait","Net_InPackets","Net_OutPackets","Net_InBytes","Net_OutBytes","Disk_Reads","Disk_ReadBytes","Disk_Writes","Disk_WriteBytes","Disk_Queue","Disk_InodesAvailable","Disk_Used","Disk_UsedPercent","Disk_Available"],
+    "sourceType":"SystemStats"
+  }]
+}
