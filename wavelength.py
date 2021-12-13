@@ -23,9 +23,6 @@ ANY_IP_PERMISSION = {
     "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "Any IP"}],
 }
 
-VZ_CENTOS7_AMI = "ami-0348652b6078c2c1d"
-AWS_CENTOS7_AMI = "ami-0348652b6078c2c1d"
-
 app = typer.Typer()
 ec2_client = boto3.client("ec2")
 ec2_resource = boto3.resource("ec2")
@@ -73,6 +70,12 @@ def deploy(
     ),
     wavelength_type: str = typer.Option(
         "t3.medium", help="Machine type for the Wavelength node"
+    ),
+    bastion_ami: str = typer.Option(
+        "ami-0348652b6078c2c1d", help="AMI ID for the bastion host"
+    ),
+    wavelength_ami: str = typer.Option(
+        "ami-0348652b6078c2c1d", help="AMI ID for the Wavelength instance"
     ),
 ):
     """
@@ -188,7 +191,7 @@ def deploy(
     bastion_instance = ec2_resource.create_instances(
         MinCount=1,
         MaxCount=1,
-        ImageId=VZ_CENTOS7_AMI,
+        ImageId=bastion_ami,
         InstanceType=bastion_type,
         KeyName=keypair_name,
         NetworkInterfaces=[
@@ -201,6 +204,9 @@ def deploy(
         ],
         UserData=user_data,
     )[0]
+
+    #  TODO: Get this from the instance
+    bastion_username = "centos"
 
     carrier_ip = ec2_client.allocate_address(
         Domain="vpc", NetworkBorderGroup=wl_zone_name
@@ -218,7 +224,7 @@ def deploy(
     wavelength_instance = ec2_resource.create_instances(
         MinCount=1,
         MaxCount=1,
-        ImageId=AWS_CENTOS7_AMI,
+        ImageId=wavelength_ami,
         InstanceType=wavelength_type,
         KeyName=keypair_name,
         NetworkInterfaces=[
@@ -282,7 +288,7 @@ def deploy(
     bastion_instance.reload()
     typer.echo("SSH to the bastion host:")
     typer.secho(
-        f"    ssh -i {key_file} -o IdentitiesOnly=yes ec2-user@{bastion_instance.public_ip_address}",
+        f"    ssh -i {key_file} -o IdentitiesOnly=yes {bastion_username}@{bastion_instance.public_ip_address}",
         bold=True,
     )
     typer.echo("iperf to the Wavelength node:")
