@@ -29,6 +29,14 @@ ec2_resource = boto3.resource("ec2")
 iam_client = boto3.client("iam")
 
 
+def bailout(messages=[]):
+    typer.secho("Stopping build.", fg=typer.colors.RED, bold=True)
+    typer.secho("Rerun this command with the 'teardown' option to try to clean up.")
+    for msg in messages:
+        typer.secho(msg)
+    raise typer.Exit(code=1)
+
+
 @app.command()
 def deploy(
     management_ips: str = typer.Argument(
@@ -36,6 +44,9 @@ def deploy(
     ),
     iperf_port: int = typer.Option(
         5001, help="Port to allow TCP and UDP traffic in for iperf"
+    ),
+    bastion_az: str = typer.Option(
+        "us-west-2c", help="Availability zone to deploy bastion host into"
     ),
     wavelength_ips: str = typer.Option(
         "174.205.0.0/16",
@@ -77,31 +88,38 @@ def deploy(
     wavelength_ami: str = typer.Option(
         "ami-0348652b6078c2c1d", help="AMI ID for the Wavelength instance"
     ),
+    use_existing: bool = typer.Option(
+        False,
+        help="Use existing items where feasible, otherwise exit when existing items are encountered",
+    ),
 ):
     """
     Create a test node in AWS Wavelength with iperf installed and running, an EC2 bastion host from which you can SSH into the Wavelegth node, and other AWS infrastructure to support them.
     """
-    typer.echo("Creating VPC")
+    typer.secho("Creating VPC", bold=True)
+    # TODO: Error out on existing VPC
     vpc = ec2_resource.create_vpc(CidrBlock="10.0.0.0/16")
     vpc.create_tags(Tags=[{"Key": "Name", "Value": vpc_name}])
     vpc.wait_until_available()
 
-    typer.echo("Creating internet gateway")
+    typer.secho("Creating internet gateway", bold=True)
     internet_gw = ec2_resource.create_internet_gateway()
     vpc.attach_internet_gateway(InternetGatewayId=internet_gw.id)
 
-    typer.echo("Creating route table")
+    typer.secho("Creating route table", bold=True)
     vpc_route_table = vpc.create_route_table()
     vpc_route_table.create_route(
         DestinationCidrBlock="0.0.0.0/0",
         GatewayId=internet_gw.id,
     )
 
-    typer.echo("Creating public subnet")
-    public_subnet = vpc.create_subnet(CidrBlock="10.0.1.0/24")
+    typer.secho("Creating public subnet", bold=True)
+    public_subnet = vpc.create_subnet(
+        CidrBlock="10.0.1.0/24", AvailabilityZone=bastion_az
+    )
     vpc_route_table.associate_with_subnet(SubnetId=public_subnet.id)
 
-    typer.echo("Creating carrier gateway")
+    typer.secho("Creating carrier gateway", bold=True)
     carrier_gw = ec2_client.create_carrier_gateway(VpcId=vpc.id)
     carrier_route_table = vpc.create_route_table()
     carrier_route_table.create_route(
@@ -109,13 +127,13 @@ def deploy(
         CarrierGatewayId=carrier_gw["CarrierGateway"]["CarrierGatewayId"],
     )
 
-    typer.echo("Creating wavelength subnet")
+    typer.secho("Creating wavelength subnet", bold=True)
     wl_subnet = ec2_resource.create_subnet(
         CidrBlock="10.0.2.0/26", AvailabilityZone=wl_zone_name, VpcId=vpc.id
     )
     carrier_route_table.associate_with_subnet(SubnetId=wl_subnet.id)
 
-    typer.echo("Creating security groups")
+    typer.secho("Creating security groups", bold=True)
     wavelength_address_block = {
         "CidrIp": wavelength_ips,
         "Description": "Carrier-side IPs",
@@ -175,7 +193,7 @@ def deploy(
         GroupId=wl_sg.id, IpPermissions=[ANY_IP_PERMISSION]
     )
 
-    typer.echo("Creating key pair")
+    typer.secho("Creating key pair", bold=True)
     # We can't recover the old private key, so remove it
     ec2_client.delete_key_pair(KeyName=keypair_name)
     keypair = ec2_client.create_key_pair(KeyName=keypair_name)
@@ -187,7 +205,7 @@ def deploy(
     with open("scripts/iperf.sh") as user_data_file:
         user_data = user_data_file.read()
 
-    typer.echo("Creating bastion instance")
+    typer.secho("Creating bastion instance", bold=True)
     bastion_instance = ec2_resource.create_instances(
         MinCount=1,
         MaxCount=1,
@@ -220,7 +238,7 @@ def deploy(
         AllocationId=carrier_ip["AllocationId"], NetworkInterfaceId=carrier_intf_id
     )
 
-    typer.echo("Creating Wavelength instance")
+    typer.secho("Creating Wavelength instance", bold=True)
     wavelength_instance = ec2_resource.create_instances(
         MinCount=1,
         MaxCount=1,
@@ -237,7 +255,7 @@ def deploy(
         UserData=user_data,
     )[0]
 
-    typer.echo("Creating IAM role")
+    typer.secho("Creating IAM role", bold=True)
     try:
         ec2_policy = json.dumps(
             {
@@ -255,7 +273,16 @@ def deploy(
             RoleName=iam_role_name, AssumeRolePolicyDocument=ec2_policy
         )
     except iam_client.exceptions.EntityAlreadyExistsException:
-        pass
+        typer.secho("  IAM role already exists...", nl=False)
+        if use_existing:
+            typer.secho("ignoring (--use-existing)", fg=typer.colors.GREEN)
+        else:
+            typer.secho("failing (--no-use-existing)", fg=typer.colors.RED)
+            bailout(
+                messages=[
+                    f"You might have to manually remove the IAM role '{iam_role_name}'"
+                ]
+            )
 
     iam_client.attach_role_policy(
         RoleName=iam_role_name,
@@ -265,13 +292,34 @@ def deploy(
     try:
         iam_client.create_instance_profile(InstanceProfileName=instance_profile_name)
     except iam_client.exceptions.EntityAlreadyExistsException:
-        pass
+        typer.secho("  Instance profile already exists...", nl=False)
+        if use_existing:
+            typer.secho("ignoring (--use-existing)", fg=typer.colors.GREEN)
+        else:
+            typer.secho("failing (--no-use-existing)", fg=typer.colors.RED)
+            bailout(
+                messages=[
+                    f"You might have to manually remove the IAM role '{iam_role_name}' and EC2 instance profile '{instance_profile_name}'"
+                ]
+            )
 
-    iam_client.add_role_to_instance_profile(
-        InstanceProfileName=instance_profile_name, RoleName=iam_role_name
-    )
+    try:
+        iam_client.add_role_to_instance_profile(
+            InstanceProfileName=instance_profile_name, RoleName=iam_role_name
+        )
+    except iam_client.exceptions.LimitExceededException:
+        typer.secho("  Role already has associated instance profile...", nl=False)
+        if use_existing:
+            typer.secho("ignoring (--use-existing)", fg=typer.colors.GREEN)
+        else:
+            typer.secho("failing (--no-use-existing)", fg=typer.colors.RED)
+            bailout(
+                messages=[
+                    f"You might have to manually remove the IAM role '{iam_role_name}' and EC2 instance profile '{instance_profile_name}'"
+                ]
+            )
 
-    typer.echo("Associating role")
+    typer.secho("Associating role", bold=True)
     bastion_instance.wait_until_running()
     ec2_client.associate_iam_instance_profile(
         IamInstanceProfile={"Name": instance_profile_name},
@@ -284,7 +332,7 @@ def deploy(
         InstanceId=wavelength_instance.id,
     )
 
-    typer.secho("Done!", fg=typer.colors.GREEN)
+    typer.secho("Done!", fg=typer.colors.GREEN, bold=True)
     bastion_instance.reload()
     typer.echo("SSH to the bastion host:")
     typer.secho(
@@ -376,7 +424,7 @@ def teardown(
     iam_instance_profile_arns = set()
     instance_ids = []
 
-    typer.echo("Terminating instances")
+    typer.secho("Terminating instances", bold=True)
     for instance in vpc.instances.all():
         if instance.iam_instance_profile:
             iam_instance_profile_arns.add(instance.iam_instance_profile["Arn"])
@@ -394,26 +442,26 @@ def teardown(
         instance.terminate()
         instance_ids.append(instance.id)
 
-    typer.echo("Waiting on instance terminations")
+    typer.secho("Waiting on instance terminations", bold=True)
     if instance_ids:
         waiter = ec2_client.get_waiter("instance_terminated")
         waiter.wait(InstanceIds=instance_ids)
 
-    typer.echo("Deleting network interfaces")
+    typer.secho("Deleting network interfaces", bold=True)
     nic_ids = get_vpc_nics(vpc.id)
     for nic_id in nic_ids:
         ec2_client.delete_network_interface(NetworkInterfaceId=nic_id)
 
-    typer.echo("Deleting internet gateways")
+    typer.secho("Deleting internet gateways", bold=True)
     for gw in vpc.internet_gateways.all():
         vpc.detach_internet_gateway(InternetGatewayId=gw.id)
         gw.delete()
 
-    typer.echo("Deleting carrier gateways")
+    typer.secho("Deleting carrier gateways", bold=True)
     for carrier_gw_id in get_carrier_gw_ids(vpc.id):
         ec2_client.delete_carrier_gateway(CarrierGatewayId=carrier_gw_id)
 
-    typer.echo("Deleting route tables")
+    typer.secho("Deleting route tables", bold=True)
     for route_table in vpc.route_tables.all():
         is_main_route_table = False
         for route_table_association in route_table.associations:
@@ -424,11 +472,11 @@ def teardown(
         if not is_main_route_table:
             route_table.delete()
 
-    typer.echo("Deleting subnets")
+    typer.secho("Deleting subnets", bold=True)
     for subnet_id in get_subnet_ids(vpc.id):
         ec2_client.delete_subnet(SubnetId=subnet_id)
 
-    typer.echo("Deleting security group dependencies")
+    typer.secho("Deleting security group dependencies", bold=True)
     for security_group_id in get_security_group_ids(vpc.id):
         try:
             ec2_client.delete_security_group(GroupId=security_group_id)
@@ -438,14 +486,14 @@ def teardown(
             else:
                 raise e
 
-    typer.echo("Deleting remaining security groups")
+    typer.secho("Deleting remaining security groups", bold=True)
     for security_group_id in get_security_group_ids(vpc.id):
         ec2_client.delete_security_group(GroupId=security_group_id)
 
-    typer.echo("Deleting VPC")
+    typer.secho("Deleting VPC", bold=True)
     vpc.delete()
 
-    typer.echo("Deleting IAM instance profiles")
+    typer.secho("Deleting IAM instance profiles", bold=True)
     iam_role_names = set()
     for instance_profile_arn in iam_instance_profile_arns:
         instance_profile_name = instance_profile_arn.split("/")[-1]
@@ -459,7 +507,7 @@ def teardown(
             )
         iam_client.delete_instance_profile(InstanceProfileName=instance_profile_name)
 
-    typer.echo("Deleting IAM roles")
+    typer.secho("Deleting IAM roles", bold=True)
     for role_name in iam_role_names:
         for policy in iam_client.list_attached_role_policies(RoleName=role_name)[
             "AttachedPolicies"
@@ -469,7 +517,7 @@ def teardown(
             )
         iam_client.delete_role(RoleName=role_name)
 
-    typer.secho("Done!", fg=typer.colors.GREEN)
+    typer.secho("Done!", fg=typer.colors.GREEN, bold=True)
 
 
 if __name__ == "__main__":
