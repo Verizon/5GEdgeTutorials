@@ -4,12 +4,11 @@ Get started on Confluent with Verizon 5G Edge today using AWS Wavelength, Conflu
 In this tutorial, use Terraform to deploy Confluent for Kubernetes to AWS Wavelength.
 
 ## Getting Started
-1. Fork the code repository for the [Confluent<>5G Edge Terraform module](https://github.com/rhbelson/vz-confluent-5gedge.git)
+1. Fork the code repository for the [Confluent<>5G Edge Terraform module](https://github.com/verizon/5GEdgeTutorials.git)
 
 ```
-git clone https://github.com/rhbelson/vz-confluent-5gedge.git
-git checkout automation_v2
-cd terraform
+git clone https://github.com/verizon/5GEdgeTutorials.git
+cd 5GEdgeTutorials/confluent/terraform
 ```
 
 2. Next, initialize Terraform within your working directory and create a preview of your deployment changes.
