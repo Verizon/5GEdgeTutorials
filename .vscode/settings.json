@@ -1,0 +1,6 @@
+{
+    "python.linting.flake8Enabled": true,
+    "python.linting.mypyEnabled": false,
+    "python.linting.enabled": true,
+    "python.pythonPath": "/Users/jpfleger/.pyenv/versions/3.10.0/envs/5g-testing-aws/bin/python"
+}
