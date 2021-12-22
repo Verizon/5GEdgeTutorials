@@ -1,0 +1,3 @@
+[submodule "mongodb/MongoDB"]
+	path = mongodb/MongoDB
+	url = https://github.com/VKonanur/MongoDB-Realm-for-Verizon-5G-Edge.git
