@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Wavelength.ViewModels"  
+             xmlns:model="clr-namespace:Wavelength.Models"  
+             xmlns:converters="clr-namespace:Wavelength.Converters;assembly=Wavelength"
+             xmlns:ffimageloading="clr-namespace:FFImageLoading.Forms;assembly=FFImageLoading.Forms"
+             x:Class="Wavelength.Views.ItemsPage"
+             x:Name="AuctionItemsPage"
+             Title="{Binding Title}"
+	         BackgroundColor="Black"
+             Visual="Material">
+    <ContentPage.Resources>
+        <converters:DateTimeOffsetToHumanizerString x:Key="DateTimeHumanizer"/>
+    </ContentPage.Resources>
+    <!--
+      x:DataType enables compiled bindings for better performance and compile time validation of binding expressions.
+      https://docs.microsoft.com/xamarin/xamarin-forms/app-fundamentals/data-binding/compiled-bindings
+    -->
+    <CollectionView 
+            x:DataType="local:ItemsViewModel" 
+            x:Name="ItemsListView"
+            ItemsSource="{Binding Items}"
+            SelectionMode="None">
+        <CollectionView.ItemTemplate>
+            <DataTemplate>
+                <Frame 
+                    BackgroundColor="Black"
+                    HasShadow="false"
+                    Padding="20, 20">
+                    <Frame 
+                        Padding="5, 10"
+                        BackgroundColor="{StaticResource CellBackgroundColor}"
+                        CornerRadius="18"
+                        HasShadow="false"
+                        HeightRequest="235">
+                        <StackLayout Padding="10" x:DataType="model:AuctionItem">
+                            <ffimageloading:CachedImage
+                                HeightRequest="150"
+				                Source="{Binding ImageUrl}"
+                                CacheDuration="60"
+                                RetryCount="3"
+                                RetryDelay="100"
+                                DownsampleToViewSize="true">
+			                </ffimageloading:CachedImage>
+                            <!--
+                            <Image Aspect="AspectFit" HeightRequest="160">
+                                <Image.Source>
+                                    <UriImageSource 
+                                        Uri="{Binding ImageUrl}" 
+                                        CacheValidity="14" 
+                                        CachingEnabled="true">
+                                    </UriImageSource>   
+                                </Image.Source>
+                            </Image>   
+                            -->
+                            <Label Text="{Binding Title}" 
+                                   LineBreakMode="NoWrap" 
+                                   Style="{DynamicResource TitleStyle}" 
+                                   TextColor="{StaticResource PageTextColor}"
+                                   Margin="0, 2, 0, 2"
+                                   FontSize="16" />
+                            <StackLayout 
+                                x:DataType="model:AuctionItem"
+                                Margin="0, 0, 0, 25"
+                                Orientation="Horizontal">
+                                <Label 
+                                    Padding="2, 0, 2, 0"
+                                    LineBreakMode="NoWrap" 
+                                    Text="Ends: "
+                                    Style="{DynamicResource CaptionStyle}" 
+                                    TextColor="{StaticResource PageTextColor}"
+                                    FontSize="16" />
+                                <Label 
+                                    Padding="5, 0, 2, 0"
+                                    LineBreakMode="NoWrap" 
+                                    Text="{Binding StopTime, 
+                                        Converter={StaticResource DateTimeHumanizer} }"
+                                    Style="{DynamicResource CaptionStyle}" 
+                                    TextColor="{StaticResource PageTextColor}"
+                                    FontSize="16" />
+                            </StackLayout>
+                            <StackLayout.GestureRecognizers>
+                                <TapGestureRecognizer 
+                                    NumberOfTapsRequired="1"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type local:ItemsViewModel}}, 
+                                        Path=ItemTapped}"		
+                                    CommandParameter="{Binding .}">
+                                </TapGestureRecognizer>
+                            </StackLayout.GestureRecognizers>
+                        </StackLayout>
+                    </Frame>
+		        </Frame>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+        <CollectionView.EmptyView>
+            <ContentView>
+                <StackLayout 
+		            HorizontalOptions="CenterAndExpand" 
+		            VerticalOptions="CenterAndExpand">
+                    <Label
+                        Margin="10, 25, 10, 10"
+                        FontAttributes="Bold"
+                        FontSize="18"
+                        HorizontalOptions="Fill"
+                        HorizontalTextAlignment="Center"
+                        TextColor="{StaticResource PageTextColor}"
+                        Text="No Auctions found at this time.  New auctions should automatically appear on this screen.">
+		            </Label>
+		        </StackLayout>
+	        </ContentView>
+	    </CollectionView.EmptyView>
+    </CollectionView>
+</ContentPage>

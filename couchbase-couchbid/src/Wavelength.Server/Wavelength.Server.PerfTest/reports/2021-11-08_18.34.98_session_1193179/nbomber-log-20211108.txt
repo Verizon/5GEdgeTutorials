@@ -1,0 +1,123 @@
+2021-11-08 13:34:54.226 -05:00 [INF] [ThreadId:1] NBomber '2.1.1' Started a new session: '2021-11-08_18.34.98_session_1193179'.
+2021-11-08 13:34:54.416 -05:00 [INF] [ThreadId:1] NBomber started as single node.
+2021-11-08 13:34:54.568 -05:00 [INF] [ThreadId:4] Plugins: 'NBomber.Plugins.Network.PingPlugin' loaded.
+2021-11-08 13:34:54.571 -05:00 [INF] [ThreadId:4] Reporting sinks: no reporting sinks were loaded.
+2021-11-08 13:34:54.571 -05:00 [INF] [ThreadId:4] Starting init...
+2021-11-08 13:34:54.589 -05:00 [INF] [ThreadId:4] Start init plugin: 'NBomber.Plugins.Network.PingPlugin'.
+2021-11-08 13:34:54.705 -05:00 [INF] [ThreadId:4] Target scenarios: 'auctionsScenario'.
+2021-11-08 13:34:54.727 -05:00 [INF] [ThreadId:4] Init finished.
+2021-11-08 13:34:54.737 -05:00 [INF] [ThreadId:5] Starting warm up...
+2021-11-08 13:34:57.101 -05:00 [FTL] [ThreadId:5] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.102 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.102 -05:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.101 -05:00 [FTL] [ThreadId:11] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.102 -05:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.103 -05:00 [FTL] [ThreadId:8] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.102 -05:00 [FTL] [ThreadId:15] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.102 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.101 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.103 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.111 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.111 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.111 -05:00 [FTL] [ThreadId:8] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.111 -05:00 [FTL] [ThreadId:11] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.112 -05:00 [FTL] [ThreadId:15] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.112 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.112 -05:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.112 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.112 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.112 -05:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.112 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.112 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.112 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:8] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.112 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.112 -05:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:11] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:15] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:11] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.114 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.114 -05:00 [FTL] [ThreadId:15] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.114 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.114 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.113 -05:00 [FTL] [ThreadId:8] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.114 -05:00 [FTL] [ThreadId:15] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.114 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.114 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.114 -05:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.114 -05:00 [FTL] [ThreadId:8] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.114 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.116 -05:00 [FTL] [ThreadId:15] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.116 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.116 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.116 -05:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.117 -05:00 [FTL] [ThreadId:8] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:11] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:15] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:8] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:11] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:8] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:11] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.118 -05:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:15] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:11] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:15] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.120 -05:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:8] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.119 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.121 -05:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.121 -05:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:34:57.121 -05:00 [FTL] [ThreadId:4] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-08 13:35:01.871 -05:00 [INF] [ThreadId:19] Starting bombing...
+2021-11-08 13:35:52.943 -05:00 [FTL] [ThreadId:27] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: 
+2021-11-08 13:35:52.943 -05:00 [FTL] [ThreadId:9] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: 
+2021-11-08 13:35:52.943 -05:00 [FTL] [ThreadId:21] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: 
+2021-11-08 13:35:52.944 -05:00 [FTL] [ThreadId:25] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: 
+2021-11-08 13:35:52.944 -05:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: 
+2021-11-08 13:35:52.944 -05:00 [FTL] [ThreadId:36] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: 
+2021-11-08 13:35:52.944 -05:00 [FTL] [ThreadId:19] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: 
+2021-11-08 13:35:52.944 -05:00 [FTL] [ThreadId:34] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: 
+2021-11-08 13:36:02.914 -05:00 [INF] [ThreadId:11] Stop plugin: 'NBomber.Plugins.Network.PingPlugin'.
+2021-11-08 13:36:02.924 -05:00 [INF] [ThreadId:9] Stopping scenarios...
+2021-11-08 13:36:02.933 -05:00 [INF] [ThreadId:9] Calculating final statistics...
+2021-11-08 13:36:03.536 -05:00 [WRN] [ThreadId:9] Test finished with errors, please check the log file.
+2021-11-08 13:36:03.538 -05:00 [INF] [ThreadId:9] Reports saved in folder: '/Users/labeaaa/Developer/couchbase/wavelength-xf/src/Wavelength.Server/Wavelength.Server.PerfTest/reports/2021-11-08_18.34.98_session_1193179'

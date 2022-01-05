@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="NBomber" />
+    <None Remove="NBomber.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NBomber" Version="2.1.1" />
+    <PackageReference Include="NBomber.Http" Version="2.0.1" />
+  </ItemGroup>
+</Project>

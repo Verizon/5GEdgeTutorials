@@ -1,0 +1,53 @@
+{
+	"interface":":4984",
+	"log": ["*"],
+	"logging": { 
+	  "console": {
+		"enabled": true,
+		"log_level": "debug",
+		"log_keys": ["*"]
+	  },
+	  "error": {
+		"enabled": true,
+		"rotation": {
+		  "max_size": 20,
+		  "max_age": 180
+		}
+	  },
+	  "warn": {
+		"enabled": true,
+		"rotation": {
+		  "max_size": 20,
+		  "max_age": 90
+		}
+	  },
+	  "info": {
+		"enabled": false
+	  },
+	  "debug": {
+		"enabled": false
+	  }
+	},
+	"databases": {
+		"wavelength": {
+			"import_docs": true,
+		  	"bucket":"wavelength",
+		  	"server": "http://127.0.0.1:8091",
+		  	"enable_shared_bucket_access":true,
+		  	"delta_sync": {
+				"enabled":false
+			},
+		  	"num_index_replicas":0,
+		  	"username": "syncgateway",
+		  	"password": "password",
+		  	"users": {
+				"demo":  { "password": "password" }
+		  	},
+			"sync":  `
+      		function sync(doc, oldDoc) {
+				channel('!'); 
+			}
+			`
+		}
+	}
+}

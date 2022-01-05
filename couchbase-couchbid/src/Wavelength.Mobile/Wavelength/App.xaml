@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Application xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Wavelength.App">
+    <!--
+        Define global resources and styles here, that apply to all pages in your app.
+    -->
+    <Application.Resources>
+        <ResourceDictionary>
+	        <!-- fonts, colors, and themeing -->
+            <Color x:Key="Primary">#212121</Color>
+            <Color x:Key="PrimaryMenuItem">#c1c1c1</Color>
+	        <Color x:Key="PageBackgroundColor">#303030</Color>
+	        <Color x:Key="PageTextColor">#BBB</Color>
+            <Color x:Key="CellBackgroundColor">#1C1C1E</Color>
+            <Color x:Key="SeparatorBackgroundColor">#505050</Color>
+            <Color x:Key="LabelLinkSettingsTextColor">#0A7AFF</Color>
+            <Color x:Key="CouchbaseRedBackgroundColor">#ED2226</Color>
+            <Style TargetType="Button">
+                <Setter Property="TextColor" Value="White"></Setter>
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="Disabled">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor" Value="#969696" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+        </ResourceDictionary>        
+    </Application.Resources>
+</Application>

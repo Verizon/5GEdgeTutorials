@@ -1,0 +1,18 @@
+2021-11-07 21:26:10.043 -05:00 [INF] [ThreadId:1] NBomber '2.1.1' Started a new session: '2021-11-08_02.26.82_session_e940c2'.
+2021-11-07 21:26:10.223 -05:00 [INF] [ThreadId:1] NBomber started as single node.
+2021-11-07 21:26:10.361 -05:00 [INF] [ThreadId:4] Plugins: 'NBomber.Plugins.Network.PingPlugin' loaded.
+2021-11-07 21:26:10.364 -05:00 [INF] [ThreadId:4] Reporting sinks: no reporting sinks were loaded.
+2021-11-07 21:26:10.364 -05:00 [INF] [ThreadId:4] Starting init...
+2021-11-07 21:26:10.380 -05:00 [INF] [ThreadId:4] Start init plugin: 'NBomber.Plugins.Network.PingPlugin'.
+2021-11-07 21:26:10.491 -05:00 [INF] [ThreadId:4] Target scenarios: 'auctionsScenario'.
+2021-11-07 21:26:10.511 -05:00 [INF] [ThreadId:4] Init finished.
+2021-11-07 21:26:10.520 -05:00 [INF] [ThreadId:5] Starting warm up...
+2021-11-07 21:26:12.890 -05:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-07 21:26:12.913 -05:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-07 21:26:12.914 -05:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-07 21:26:12.916 -05:00 [FTL] [ThreadId:8] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-07 21:26:17.647 -05:00 [INF] [ThreadId:24] Starting bombing...
+2021-11-07 21:27:18.679 -05:00 [INF] [ThreadId:31] Stop plugin: 'NBomber.Plugins.Network.PingPlugin'.
+2021-11-07 21:27:18.687 -05:00 [INF] [ThreadId:22] Stopping scenarios...
+2021-11-07 21:27:18.697 -05:00 [INF] [ThreadId:22] Calculating final statistics...
+2021-11-07 21:27:19.236 -05:00 [INF] [ThreadId:22] Reports saved in folder: '/Users/labeaaa/Developer/couchbase/wavelength-xf/src/Wavelength.Server/Wavelength.Server.PerfTest/reports/2021-11-08_02.26.82_session_e940c2'

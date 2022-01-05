@@ -1,0 +1,330 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:Wavelength.ViewModels"  
+    x:Class="Wavelength.Views.InformationPage"
+    x:Name="InformationListingPage"
+    Title="{Binding Title}"
+    BackgroundColor="Black"
+    Visual="Material">
+
+	<ContentPage.Content>
+    <ScrollView x:DataType="local:InformationViewModel" >
+        <StackLayout>
+	        <!-- Device Information -->
+	        <Label 
+		        Margin="28, 30, 0, 0"
+		        Style="{DynamicResource ListItemDetailTextStyle}"
+		        TextColor="{StaticResource PageTextColor}"        
+		        Text="Device">
+	        </Label> 
+	        <Frame
+		        BackgroundColor="{StaticResource CellBackgroundColor}"
+		        CornerRadius="12"
+		        HeightRequest="20"
+		        Margin="12, 4, 12, 8"
+		        Padding="0, 8"
+		        HasShadow="false">
+		        <StackLayout>
+			        <StackLayout
+				        Orientation="Horizontal">
+				        <Label 
+					        Padding="16, 0, 0, 0"
+					        VerticalTextAlignment="Center"
+					        Text="DeviceId"
+							Style="{DynamicResource CaptionStyle}"
+					        TextColor="White">
+					        </Label>
+					    <Label 
+					        Margin="2, 0, 16, 0"
+					        Text="{Binding DeviceId}"
+					        LineBreakMode="CharacterWrap"
+					        VerticalTextAlignment="Center"
+					        HorizontalTextAlignment="End"
+					        HorizontalOptions="EndAndExpand"
+							FontSize="Small"
+					        TextColor="{StaticResource PageTextColor}">
+				        </Label>
+			        </StackLayout>
+		        </StackLayout>
+	        </Frame>
+	        <!-- network/api connection information -->
+	        <Label 
+                Margin="28, 30, 0, 0"
+                Style="{DynamicResource ListItemDetailTextStyle}"
+			    TextColor="{StaticResource PageTextColor}"        
+		        Text="CONNECTION">
+	        </Label>
+            <Frame
+		        BackgroundColor="{StaticResource CellBackgroundColor}"
+                CornerRadius="12"
+                HeightRequest="100"
+                Margin="12, 4, 12, 8"
+                Padding="0, 8"
+		        HasShadow="false">
+                <StackLayout>
+                    <StackLayout
+		                Orientation="Horizontal">
+                        <Label 
+                            Padding="16, 0, 0, 0"
+                            VerticalTextAlignment="Center"
+			                Text="Location"
+					        Style="{DynamicResource CaptionStyle}"
+                            TextColor="White">
+		                </Label>
+                        <Label 
+							FontSize="Small"
+                            Margin="2, 0, 16, 0"
+			                Text="{Binding DatacenterLocation}"
+                            LineBreakMode="CharacterWrap"
+                            VerticalTextAlignment="Center"
+                            HorizontalTextAlignment="End"
+                            HorizontalOptions="EndAndExpand"
+                            TextColor="{StaticResource PageTextColor}">
+                        </Label>
+		            </StackLayout>
+                    <BoxView 
+		                HeightRequest="1" 
+		                Margin="16, 4, 0, 4" 
+		                Color="{StaticResource SeparatorBackgroundColor}">
+		            </BoxView>
+                    <StackLayout
+						HeightRequest="80"
+		                Orientation="Horizontal">
+                        <Label 
+                            Padding="16, 0, 0, 0"
+                            VerticalTextAlignment="Center"
+			                Text="Sync Gateway"
+					        Style="{DynamicResource CaptionStyle}"
+                            TextColor="White">
+		                </Label>
+                        <Label 
+							FontSize="10"
+                            Margin="1, 0, 10, 0"
+			                Text="{Binding SyncGatewayUri}"
+                            LineBreakMode="CharacterWrap"
+                            VerticalTextAlignment="Center"
+                            HorizontalTextAlignment="End"
+                            HorizontalOptions="EndAndExpand"
+                            TextColor="{StaticResource PageTextColor}">
+                        </Label>
+		            </StackLayout>
+                     <BoxView 
+		                HeightRequest="1" 
+		                Margin="16, 4, 0, 4" 
+		                Color="{StaticResource SeparatorBackgroundColor}">
+		            </BoxView>
+                    <StackLayout
+		                Orientation="Horizontal">
+                        <Label 
+                            Padding="16, 0, 0, 0"
+                            VerticalTextAlignment="Center"
+			                Text="REST API"
+					        Style="{DynamicResource CaptionStyle}"
+                            TextColor="White">
+		                </Label>
+                        <Label 
+							FontSize="10"
+                            Margin="1, 0, 10, 0"
+			                Text="{Binding RestApiUri}"
+                            LineBreakMode="CharacterWrap"
+                            VerticalTextAlignment="Center"
+                            HorizontalTextAlignment="End"
+                            HorizontalOptions="EndAndExpand"
+                            TextColor="{StaticResource PageTextColor}">
+                        </Label>
+		            </StackLayout>
+                </StackLayout>
+	        </Frame>
+	        
+	        <!-- Database Section -->
+	        
+             <Label 
+                Margin="28, 30, 0, 0"
+                Style="{DynamicResource ListItemDetailTextStyle}"
+			    TextColor="{StaticResource PageTextColor}"        
+		        Text="DATABASE">
+	        </Label>
+            <Frame
+		        BackgroundColor="{StaticResource CellBackgroundColor}"
+                CornerRadius="12"
+                HeightRequest="220"
+                Margin="12, 4, 12, 8"
+                Padding="0, 8"
+		        HasShadow="false">
+                <StackLayout>
+                    <StackLayout
+		                Orientation="Horizontal">
+                        <Label 
+                            Padding="16, 0, 0, 0"
+                            VerticalTextAlignment="Center"
+			                Text="Name"
+ 					        Style="{DynamicResource CaptionStyle}"
+                            TextColor="White">
+		                </Label>
+                        <Label 
+                            Margin="2, 0, 16, 0"
+			                Text="{Binding DatabaseName}"
+                            LineBreakMode="CharacterWrap"
+                            VerticalTextAlignment="Center"
+                            HorizontalTextAlignment="End"
+                            HorizontalOptions="EndAndExpand"
+                            TextColor="{StaticResource PageTextColor}">
+                        </Label>
+		            </StackLayout>
+                    <BoxView 
+		                HeightRequest="1" 
+		                Margin="16, 4, 0, 4" 
+		                Color="{StaticResource SeparatorBackgroundColor}">
+		            </BoxView>
+                    <StackLayout
+		                Orientation="Horizontal">
+                        <Label 
+                            Padding="16, 0, 0, 0"
+                            VerticalTextAlignment="Center"
+			                Text="Replication Status"
+					        Style="{DynamicResource CaptionStyle}"
+                            TextColor="White">
+		                </Label>
+                        <Label 
+                            Margin="2, 0, 16, 0"
+			                Text="{Binding ReplicationStatus}"
+                            VerticalTextAlignment="Center"
+                            HorizontalTextAlignment="End"
+                            HorizontalOptions="EndAndExpand"
+                            LineBreakMode="CharacterWrap"
+                            TextColor="{StaticResource PageTextColor}">
+                        </Label>
+		            </StackLayout>
+	                <BoxView 
+		                HeightRequest="1" 
+		                Margin="16, 4, 0, 4" 
+		                Color="{StaticResource SeparatorBackgroundColor}">
+					</BoxView>
+	                <StackLayout
+		                Orientation="Horizontal">
+		                <Label 
+			                Padding="16, 0, 0, 0"
+			                VerticalTextAlignment="Center"
+			                Text="Indexes"
+					        Style="{DynamicResource CaptionStyle}"
+			                TextColor="White">
+		                </Label>
+		                <Label 
+			                Margin="2, 0, 16, 0"
+			                Text="{Binding IndexCount}"
+			                VerticalTextAlignment="Center"
+			                HorizontalTextAlignment="End"
+			                HorizontalOptions="EndAndExpand"
+			                LineBreakMode="CharacterWrap"
+			                TextColor="{StaticResource PageTextColor}">
+		                </Label>
+	                </StackLayout>
+                     <BoxView 
+		                HeightRequest="1" 
+		                Margin="16, 4, 0, 4" 
+		                Color="{StaticResource SeparatorBackgroundColor}">
+		            </BoxView>
+	                <StackLayout
+		                Orientation="Horizontal">
+		                <Label 
+			                Padding="16, 0, 0, 0"
+			                VerticalTextAlignment="Center"
+			                Text="Auctions"
+					        Style="{DynamicResource CaptionStyle}"
+			                TextColor="White">
+		                </Label>
+		                <Label 
+			                Margin="2, 0, 16, 0"
+			                Text="{Binding AuctionCount}"
+			                LineBreakMode="CharacterWrap"
+			                VerticalTextAlignment="Center"
+			                HorizontalTextAlignment="End"
+			                HorizontalOptions="EndAndExpand"
+			                TextColor="{StaticResource PageTextColor}">
+		                </Label>
+	                </StackLayout>
+	                <BoxView 
+		                HeightRequest="1" 
+		                Margin="16, 4, 0, 4" 
+		                Color="{StaticResource SeparatorBackgroundColor}">
+	                </BoxView>
+	                <StackLayout
+		                Orientation="Horizontal">
+		                <Label 
+			                Padding="16, 0, 0, 0"
+			                VerticalTextAlignment="Center"
+			                Text="Bids"
+					        Style="{DynamicResource CaptionStyle}"
+			                TextColor="White">
+		                </Label>
+		                <Label 
+			                Margin="2, 0, 16, 0"
+			                Text="{Binding BidCount}"
+			                LineBreakMode="CharacterWrap"
+			                VerticalTextAlignment="Center"
+			                HorizontalTextAlignment="End"
+			                HorizontalOptions="EndAndExpand"
+			                TextColor="{StaticResource PageTextColor}">
+		                </Label>
+	                </StackLayout>
+	                <BoxView 
+		                HeightRequest="1" 
+		                Margin="16, 4, 0, 4" 
+		                Color="{StaticResource SeparatorBackgroundColor}">
+	                </BoxView>
+                    <StackLayout
+		                Orientation="Horizontal">
+                        <Label 
+                            Padding="16, 0, 0, 0"
+                            VerticalTextAlignment="Center"
+			                Text="Delete Database"
+                            FontAttributes="Bold"
+                            Style="{DynamicResource SubtitleStyle}"
+                            TextColor="{DynamicResource LabelLinkSettingsTextColor}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="DeleteDatabase_Tapped">
+				                </TapGestureRecognizer>
+                            </Label.GestureRecognizers>
+		                </Label>
+		            </StackLayout>
+                </StackLayout>
+	        </Frame>
+	        
+	        <!-- Manage section -->
+             <Label 
+                Margin="28, 30, 0, 0"
+                Style="{DynamicResource ListItemDetailTextStyle}"
+			    TextColor="{StaticResource PageTextColor}"        
+		        Text="MANAGE">
+	        </Label>
+            <Frame
+		        BackgroundColor="{StaticResource CellBackgroundColor}"
+                CornerRadius="12"
+                HeightRequest="20"
+                Margin="12, 4, 12, 8"
+                Padding="0, 8"
+		        HasShadow="false">
+                <StackLayout>
+                    <StackLayout
+		                Orientation="Horizontal">
+                        <Label 
+                            FontAttributes="Bold"
+                            Padding="16, 0, 0, 0"
+                            VerticalTextAlignment="Center"
+			                Text="Options (Password Required)"
+                            Style="{DynamicResource SubtitleStyle}"
+                            TextColor="{DynamicResource LabelLinkSettingsTextColor}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="Options_Tapped">
+				                </TapGestureRecognizer>
+                            </Label.GestureRecognizers>
+		                </Label>
+		            </StackLayout>
+                </StackLayout>
+	        </Frame>
+	    </StackLayout>
+    </ScrollView>
+    </ContentPage.Content>
+</ContentPage>

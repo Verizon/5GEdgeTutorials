@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:41703",
+      "sslPort": 44358
+    }
+  },
+  "profiles": {
+    "Wavelength.Server.WebAPI": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_Kestrel__Certificates__Default__Path": "../../../localdev/localhost.crt",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_Kestrel__Certificates__Default__KeyPath": "../../../localdev/localhost.key"
+      },
+      "applicationUrl": "https://0.0.0.0:9001;http://0.0.0.0:9000"
+    },
+    "Wavelength": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Wavelength"
+      },
+      "applicationUrl": "https://0.0.0.0:9001;http://0.0.0.0:9000"
+    },
+    "Cloud": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Cloud"
+      },
+      "applicationUrl": "https://0.0.0.0:9001;http://0.0.0.0:9000"
+    }
+  }
+}
