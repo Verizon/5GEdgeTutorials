@@ -1,0 +1,15 @@
+cbsettings_CBLocation="Cloud"
+cbsettings_CBMode="Server"
+cbsettings_CBUsername="Administrator"
+cbsettings_CBPassword="password"
+cbsettings_CBConnectionString="couchbase://cb-server-7"
+cbsettings_CBBucketName="wavelength"
+cbsettings_CBScopeName="_default"
+cbsettings_CBCollectionName="_default"
+cbsettings_CBDatabaseName="auctions"
+cbsettings_CBSyncGatewayUri="ws://sync-gateway-wavelength:4984/wavelength"
+cbsettings_CBSyncGatewayUsername="demo"
+cbsettings_CBSyncGatewayPassword="password"
+cbsettings_CBUseSsl=false
+cbsettings_CBClosingCode="123"
+cbsettings_CBDurabilityPersistToMajority=true

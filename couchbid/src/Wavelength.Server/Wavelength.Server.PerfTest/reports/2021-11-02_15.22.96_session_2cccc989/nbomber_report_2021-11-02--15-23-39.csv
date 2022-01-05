@@ -1,0 +1,2 @@
+test_suite,test_name,scenario,duration,step_name,request_count,ok,failed,rps,min,mean,max,50_percent,75_percent,95_percent,99_percent,std_dev,data_transfer_min_kb,data_transfer_mean_kb,data_transfer_max_kb,data_transfer_all_mb
+nbomber_default_test_suite_name,nbomber_default_test_name,auctionsScenario,00:00:30,fetchAuctions,1500,1300,200,43.3,0.94,15.83,316.98,3,4.72,18.54,310.78,59.01,0.159,0.161,0.162,0.2057

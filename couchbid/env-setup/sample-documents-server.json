@@ -1,0 +1,34 @@
+[
+	{
+		"documentId": "c805cede-3be9-4a84-b0b4-6ab107d1eda4",
+		"documentType": "auction",
+		"isActive": true,
+		"title": "Verizon Hoodie",
+		"imageUrl": "https://m.media-amazon.com/images/I/71h+PYDfj2L._AC_UX679_.jpg",
+		"stopTime": "2021-11-31T23:35:00.00000"
+	},
+	{
+		"documentId": "3ff4b995-2137-43ec-b36f-cda012592b40",
+		"documentType": "auction",
+		"isActive": true,
+		"title": "Verizon Hat",
+		"imageUrl": "https://m.media-amazon.com/images/I/717O-j9rK6L._AC_UX679_.jpg",
+		"stopTime": "2021-11-31T23:45:00.00000"
+	},
+	{
+		"documentId": "ec963756-aa90-499c-ae0c-3a6fa38b1dfc",
+		"documentType": "auction",
+		"isActive": true,
+		"title": "Verizon Shirt",
+		"imageUrl": "https://m.media-amazon.com/images/I/61PBN5WFtVL._AC_UX679_.jpg",
+		"stopTime": "2021-11-31T23:45:00.00000"
+	},
+	{
+		"documentId": "ec948058-d40a-4436-a526-0e9f84ccc429",
+		"documentType": "auction",
+		"isActive": true,
+		"title": "Verizon Socks",
+		"imageUrl": "https://m.media-amazon.com/images/I/91j7WZeH0ZL._AC_UY879_.jpg",
+		"stopTime": "2021-11-31T23:45:00.00000"
+	}
+]

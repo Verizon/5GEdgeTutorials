@@ -1,0 +1,21 @@
+2021-11-02 00:58:48.646 -04:00 [INF] [ThreadId:1] NBomber '2.1.1' Started a new session: '2021-11-02_04.58.43_session_b818b211'.
+2021-11-02 00:58:48.821 -04:00 [INF] [ThreadId:1] NBomber started as single node.
+2021-11-02 00:58:48.947 -04:00 [INF] [ThreadId:4] Plugins: 'NBomber.Plugins.Network.PingPlugin' loaded.
+2021-11-02 00:58:48.950 -04:00 [INF] [ThreadId:4] Reporting sinks: no reporting sinks were loaded.
+2021-11-02 00:58:48.950 -04:00 [INF] [ThreadId:4] Starting init...
+2021-11-02 00:58:48.963 -04:00 [INF] [ThreadId:4] Start init plugin: 'NBomber.Plugins.Network.PingPlugin'.
+2021-11-02 00:58:49.063 -04:00 [INF] [ThreadId:4] Target scenarios: 'auctionsScenario'.
+2021-11-02 00:58:49.081 -04:00 [INF] [ThreadId:4] Init finished.
+2021-11-02 00:58:49.089 -04:00 [INF] [ThreadId:5] Starting warm up...
+2021-11-02 00:58:51.455 -04:00 [FTL] [ThreadId:15] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-02 00:58:51.454 -04:00 [FTL] [ThreadId:16] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-02 00:58:51.455 -04:00 [FTL] [ThreadId:14] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-02 00:58:51.457 -04:00 [FTL] [ThreadId:13] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-02 00:58:51.457 -04:00 [FTL] [ThreadId:12] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-02 00:58:51.458 -04:00 [FTL] [ThreadId:5] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-02 00:58:51.458 -04:00 [FTL] [ThreadId:10] Step 'fetchAuctions' from scenario 'auctionsScenario' has failed. Error: step timeout
+2021-11-02 00:58:56.213 -04:00 [INF] [ThreadId:18] Starting bombing...
+2021-11-02 00:59:07.252 -04:00 [INF] [ThreadId:8] Stop plugin: 'NBomber.Plugins.Network.PingPlugin'.
+2021-11-02 00:59:07.260 -04:00 [INF] [ThreadId:33] Stopping scenarios...
+2021-11-02 00:59:07.269 -04:00 [INF] [ThreadId:33] Calculating final statistics...
+2021-11-02 00:59:07.763 -04:00 [INF] [ThreadId:33] Reports saved in folder: '/Users/labeaaa/Developer/couchbase/wavelength-xf/src/Wavelength.Server/Wavelength.Server.PerfTest/reports/2021-11-02_04.58.43_session_b818b211'

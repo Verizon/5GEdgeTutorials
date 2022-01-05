@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Wavelength.Views.AboutPage"
+             xmlns:vm="clr-namespace:Wavelength.ViewModels"
+             xmlns:fontAwesome="clr-namespace:Wavelength.Controls"
+             BackgroundColor="Black"
+             Title="{Binding Title}"
+             Visual="Material">
+    
+    <ContentPage.BindingContext>
+        <vm:AboutViewModel />
+    </ContentPage.BindingContext>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <!--
+        <StackLayout BackgroundColor="{StaticResource Accent}" VerticalOptions="FillAndExpand" HorizontalOptions="Fill">
+            <StackLayout Orientation="Horizontal" HorizontalOptions="Center" VerticalOptions="Center">
+                <ContentView Padding="0,40,0,40" VerticalOptions="FillAndExpand">
+                    <Image Source="https://www.verizon.com/content/dam/vzwcom/gnav/global/full_logo_white.png" VerticalOptions="Center" HeightRequest="64" />
+                </ContentView>
+            </StackLayout>
+        </StackLayout>
+        -->
+        <ScrollView Grid.Row="1">
+            <StackLayout 
+		        x:DataType="vm:AboutViewModel" 
+		        Orientation="Vertical" 
+		        Padding="30,24,30,24" 
+		        Spacing="10">
+                <Label 
+                    Text="{Binding AboutDescriptionIntro}"
+                    TextColor="{StaticResource PageTextColor}"
+		            FontSize="Body"/>
+                <Label 
+                    Margin="0, 5"
+                    Text="{Binding AboutDescriptionDetails}"
+                    TextColor="{StaticResource PageTextColor}"
+		            FontSize="Body"/>
+                <Label 
+                    Margin="0, 5"
+                    Text="{Binding AboutDescriptionDisclaimer}"
+                    TextColor="{StaticResource PageTextColor}"
+		            FontSize="Body"/>
+                <BoxView 
+                    HeightRequest="1" 
+                    Margin="1, 4, 0, 4" 
+                    Color="{StaticResource SeparatorBackgroundColor}">
+                </BoxView>
+                <Label 
+		            Text="Couchbase Mobile" 
+                    TextColor="{StaticResource PageTextColor}"
+		            FontSize="Title"/>
+                <Label 
+                    TextColor="{StaticResource PageTextColor}"
+		            Text="{Binding AboutCouchbaseLite}" 
+		            FontSize="16" 
+		            Padding="0,0,0,0"/>
+                <Label 
+		            FontSize="16" 
+		            Padding="0,24,0,0">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <FormattedString.Spans>
+                                <Span 
+				                    Text="Learn more at "/>
+                                <Span 
+				                    Text="https://developer.couchbase.com/mobile/" 
+				                    FontAttributes="Bold"/>
+                            </FormattedString.Spans>
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Button Margin="0,10,0,0" 
+			            Text="Learn more"
+                        Command="{Binding OpenCouchbaseWebCommand}"
+                        BackgroundColor="{StaticResource CouchbaseRedBackgroundColor}"
+                        TextColor="White" />
+                <BoxView 
+                    HeightRequest="1" 
+                    Margin="1, 4, 0, 4" 
+                    Color="{StaticResource SeparatorBackgroundColor}">
+                </BoxView>
+                <Label 
+		            Text="AWS Wavelength" 
+                    TextColor="{StaticResource PageTextColor}"
+		            FontSize="Title"/>
+                <Label 
+                    TextColor="{StaticResource PageTextColor}"
+		            Text="Deliver ultra-low-latency applications for 5G devices." 
+		            FontSize="16" 
+		            Padding="0,0,0,0"/>
+                <Label 
+		            FontSize="16" 
+		            Padding="0,24,0,0">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <FormattedString.Spans>
+                                <Span Text="Learn more at "/>
+                                <Span Text="https://aws.amazon.com/wavelength/" FontAttributes="Bold"/>
+                            </FormattedString.Spans>
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Button Margin="0,10,0,0" Text="Learn more"
+                        Command="{Binding OpenAWSWebCommand}"
+                        BackgroundColor="{StaticResource CouchbaseRedBackgroundColor}"
+                        TextColor="White" />
+                <BoxView 
+                    HeightRequest="1" 
+                    Margin="1, 4, 0, 4" 
+                    Color="{StaticResource SeparatorBackgroundColor}">
+                </BoxView>
+                <Label 
+		            Text="Verizon 5G Edge" 
+                    TextColor="{StaticResource PageTextColor}"
+		            FontSize="Title"/>
+                <Label 
+                    TextColor="{StaticResource PageTextColor}"
+		            Text="Enabling the power of edge computing build right!" 
+		            FontSize="16" 
+		            Padding="0,0,0,0"/>
+                <Label 
+		            FontSize="16" 
+		            Padding="0,24,0,0">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <FormattedString.Spans>
+                                <Span Text="Learn more at "/>
+                                <Span Text="https://www.verizon.com/business/solutions/5g/edge-computing/developer-resources/" FontAttributes="Bold"/>
+                            </FormattedString.Spans>
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Button Margin="0,10,0,0" Text="Learn more"
+                        Command="{Binding OpenVerizonWebCommand}"
+                        BackgroundColor="{StaticResource CouchbaseRedBackgroundColor}"
+                        TextColor="White" />
+            </StackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>
