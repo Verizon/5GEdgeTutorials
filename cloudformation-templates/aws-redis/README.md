@@ -12,7 +12,7 @@ pip3 install redis
 For private clusters, run the `private-redis-cluster.yaml` file in CloudFormation.
 
 ```bash
-aws cloudformation create-stack --stack-name edis_5GEdge_Private_Cluster --template-body file://private-redis-cluster.yaml  --parameters ParameterKey=EnvironmentName,ParameterValue=Verizon5GEdge --capabilities CAPABILITY_IAM
+aws cloudformation create-stack --stack-name Redis_5GEdge_Private_Cluster --template-body file://private-redis-cluster.yaml  --parameters ParameterKey=EnvironmentName,ParameterValue=Verizon5GEdge --capabilities CAPABILITY_IAM
 ```
 
 Next, from a Wavelength Zone, utilize Sentinel to connect to an available node. From your client, ensure that pip3 is installed (`yum install python3-pip`) and that the redis client is installed as well (`pip3 install redis`).
