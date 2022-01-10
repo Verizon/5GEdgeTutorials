@@ -1,0 +1,502 @@
+# Robbie Belson and Brent Eiler | Verizon | 2021
+# 5G Edge CloudFormation Template for Single (Private) Redis Cluster
+Metadata:
+  License: Apache 2.0
+Description:  'This template deploys a single Redis Enterprise cluster
+to a Verizon Wavelength Zone.  **WARNING** This template creates Amazon EC2 instances.
+You will be billed for the AWS resources used if you create a stack from this template.'
+
+Parameters:
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+
+  Domain:
+    Description: Please enter your domain name (i.e., aceg.com) to create your DNS records using Route53
+    Type: String
+    Default: yourdomain.com.
+
+  RedisUsername:
+    Description: Please enter your username for creating your RS cluter.
+    Type: String
+    Default: user@test.com
+
+  RedisPassword:
+    Description: Please enter your password for creating your RS cluter.
+    Type: String
+    Default: adminPassword
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.0.0.0/16
+
+  WavelengthZone1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.0.0/24
+
+  WavelengthInstanceType:
+    Type: String
+    Description: Enter a valid instance type for Wavelength infrastructure.
+    Default: t3.medium
+    AllowedValues:
+      - t3.medium
+      - t3.xlarge
+      - r5.2xlarge
+      - g4dn.2xlarge
+
+  ParentRegionSubnetCIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.1.0/24
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access into the instances
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: test_key
+
+  WavelengthZoneGeo:
+    Type: String
+    Description: Enter a valid Wavelength Zone in the region. Please note the parent region of your selection must match the region of the other subnet you selected above.
+    Default: us-east-1-wl1-bos-wlz-1
+    AllowedValues:
+      - us-east-1-wl1-bos-wlz-1
+      - us-east-1-wl1-atl-wlz-1
+      - us-east-1-wl1-was-wlz-1
+      - us-east-1-wl1-nyc-wlz-1
+      - us-east-1-wl1-mia-wlz-1
+      - us-east-1-wl1-dfw-wlz-1
+      - us-west-2-wl1-las-wlz-1
+      - us-west-2-wl1-sfo-wlz-1
+      - us-west-2-wl1-den-wlz-1
+      - us-west-2-wl1-sea-wlz-1
+
+  ParentRegionGeo:
+    Type: String
+    Description: Enter a valid Availability Zone in the region.
+    Default: us-east-1a
+    AllowedValues:
+      - us-east-1a
+      - us-east-1b
+      - us-east-1c
+      - us-east-1d
+      - us-east-1e
+      - us-east-1f
+      - us-west-2a
+      - us-west-2b
+      - us-west-2c
+      - us-west-2d
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      HVM64: ami-0015fcaa5516c75ed
+    us-west-2:
+      HVM64: ami-00aa0a1b208ece144
+
+Resources:
+  #Start with single VPC in user-selected region
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+ #Carrier gateway access for carrier subnet in Wavelength Zone
+  CarrierGateway:
+    Type: AWS::EC2::CarrierGateway
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+  #Internet gateway access for public subnet in Availability Zone
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  AvailabilityZone1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref ParentRegionGeo
+      CidrBlock: !Ref ParentRegionSubnetCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Availability Zone
+  WavelengthZone1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref WavelengthZoneGeo
+      CidrBlock: !Ref WavelengthZone1CIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Wavelength Zone (WLZ1)
+
+  #Availability Zone Routing
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Parent Route Table
+  DefaultIGWRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref AvailabilityZone1
+
+  #Wavelength Zone Routing
+  CarrierRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WLZ Route Table
+  DefaultCGWRoute:
+    Type: AWS::EC2::Route
+    DependsOn: CarrierGateway
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      CarrierGatewayId: !Ref CarrierGateway
+  CarrierRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref CarrierRouteTable
+      SubnetId: !Ref WavelengthZone1
+
+  WLSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: redis-edge-sg
+      GroupDescription: Security group with DNS/TCP access
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 1968
+          ToPort: 1968
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3333
+          ToPort: 3339
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 36379
+          ToPort: 36380
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8001
+          ToPort: 8002
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8004
+          ToPort: 8004
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8443
+          ToPort: 8444
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 9080
+          ToPort: 9081
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8070
+          ToPort: 8071
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 9443
+          ToPort: 9443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 10000
+          ToPort: 29999
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 5353
+          ToPort: 5353
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId:
+            Fn::GetAtt:
+            - ParentSecurityGroup
+            - GroupId
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+
+  ParentSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: redis-parent-sg
+      GroupDescription: Security group with DNS/TCP access
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 1968
+          ToPort: 1968
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3333
+          ToPort: 3339
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 36379
+          ToPort: 36380
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8001
+          ToPort: 8002
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8004
+          ToPort: 8004
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8443
+          ToPort: 8444
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 9080
+          ToPort: 9081
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8070
+          ToPort: 8071
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 9443
+          ToPort: 9443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 10000
+          ToPort: 29999
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 5353
+          ToPort: 5353
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+
+  R53IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonRoute53FullAccess
+  R53InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref R53IAMRole
+################################################################################
+########Parent Region Infrastructure############################################
+################################################################################
+  BastionHost:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: AmazonSSMRoleForInstancesQuickSetup
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", HVM64]
+      InstanceType: "t2.micro"
+      KeyName: !Ref KeyName
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: "true"
+        PrivateIpAddress: 10.0.1.50
+        DeviceIndex: "0"
+        GroupSet:
+          - Ref: "ParentSecurityGroup"
+        SubnetId: !Ref AvailabilityZone1
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Instance
+
+
+################################################################################
+########Wavelength Zone Infrastructure############################################
+################################################################################
+ #Launch template
+  WLLaunchTemplateLeader:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub '${AWS::StackName}-launch-template-for-edge-redis-leader'
+      LaunchTemplateData:
+        BlockDeviceMappings:
+        - DeviceName: /dev/sdh
+          Ebs:
+            VolumeSize: 5
+            VolumeType: gp2
+            DeleteOnTermination: true
+            Encrypted: true
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            AssociateCarrierIpAddress: true
+            PrivateIpAddress: 10.0.0.50
+            SubnetId: !Ref WavelengthZone1
+            Groups:
+              - !Ref 'WLSecurityGroup'
+            DeleteOnTermination: true
+        ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", HVM64]
+        InstanceType: !Ref 'WavelengthInstanceType'
+        KeyName: !Ref 'KeyName'
+
+ #Launch template
+  WLLaunchTemplateWorker:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub '${AWS::StackName}-launch-template-for-edge-redis-worker'
+      LaunchTemplateData:
+        BlockDeviceMappings:
+        - DeviceName: /dev/sdh
+          Ebs:
+            VolumeSize: 5
+            VolumeType: gp2
+            DeleteOnTermination: true
+            Encrypted: true
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            AssociateCarrierIpAddress: true
+            SubnetId: !Ref WavelengthZone1
+            Groups:
+              - !Ref 'WLSecurityGroup'
+            DeleteOnTermination: true
+        ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", HVM64]
+        InstanceType: !Ref 'WavelengthInstanceType'
+        KeyName: !Ref 'KeyName'
+
+  RedisEdgeLeader:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref 'WLLaunchTemplateLeader'
+        Version: 1
+      IamInstanceProfile: !Ref 'R53InstanceProfile'
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            sudo yum install -y wget
+            cd /home/ec2-user
+            wget https://wavelengthtutorials.s3.amazonaws.com/redislabs-6.0.12-49-rhel7-x86_64.tar
+            tar -xvf redislabs-6.0.12-49-rhel7-x86_64.tar
+            sudo ./install.sh -y
+            sudo su
+            cd /opt/redislabs/bin/
+            ./rladmin cluster create username ${RedisUsername} password ${RedisPassword} name ${Domain}
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WL Instance 1
+
+  RedisEdgeWorker1:
+    Type: AWS::EC2::Instance
+    DependsOn: RedisEdgeLeader
+    Properties:
+      IamInstanceProfile: AmazonSSMRoleForInstancesQuickSetup
+      LaunchTemplate:
+        LaunchTemplateId: !Ref 'WLLaunchTemplateWorker'
+        Version: 1
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            sudo yum install -y wget
+            cd /home/ec2-user
+            wget https://wavelengthtutorials.s3.amazonaws.com/redislabs-6.0.12-49-rhel7-x86_64.tar
+            tar -xvf redislabs-6.0.12-49-rhel7-x86_64.tar
+            sudo ./install.sh -y
+            sudo su
+            cd /opt/redislabs/bin/
+            ./rladmin cluster join nodes 10.0.0.50 username ${RedisUsername} password ${RedisPassword}
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WL Instance 2
+
+  RedisEdgeWorker2:
+    Type: AWS::EC2::Instance
+    DependsOn: RedisEdgeWorker1
+    Properties:
+      IamInstanceProfile: AmazonSSMRoleForInstancesQuickSetup
+      LaunchTemplate:
+        LaunchTemplateId: !Ref 'WLLaunchTemplateWorker'
+        Version: 1
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            sudo yum install -y wget
+            cd /home/ec2-user
+            wget https://wavelengthtutorials.s3.amazonaws.com/redislabs-6.0.12-49-rhel7-x86_64.tar
+            tar -xvf redislabs-6.0.12-49-rhel7-x86_64.tar
+            sudo ./install.sh -y
+            sudo su
+            cd /opt/redislabs/bin/
+            ./rladmin cluster join nodes 10.0.0.50 username ${RedisUsername} password ${RedisPassword}
+            ./rladmin tune cluster default_sharded_proxy_policy all-nodes
+            ./rladmin cluster config handle_redirects enabled
+            curl -k -u "user@test.com:adminPassword" -H "Content-type:application/json" -d '{"name":"edgeDB","type":"redis","memory_size":102400,"port":12345}' -X POST https://10.0.0.50:9443/v1/bdbs
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WL Instance 3
