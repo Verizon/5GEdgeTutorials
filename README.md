@@ -24,9 +24,19 @@ We want to make it easier than ever to develop applications for the network edge
  - `confluent`: Build your first data streaming application using Confluent for Kubernetes on AWS Wavelength
  - `edge-discovery`: Get started with the Verizon edge discovery service, an easy-to-use API to manage multi-Wavelength zone deployments and route mobile clients to the most optimal edge endpoints
  - `new-relic`: Instrument your first EKS environment using Pixie
+ - `openshift`: Deploying your first OpenShift cluster to AWS Wavelength 
  - `sdk-tutorials`: Get started using Boto3 (Python SDK for AWS) across EC2 or EKS
  - `sumologic`: Instrument your first EC2-based edge deployment using Sumo Logic custom collectors
  - `terraform`: Get started using HashiCorp Terraform across HAProxy, MongoDB, EC2, and EKS
+
+
+## Community Resources
+There are a bunch of awesome projects building on Verizon 5G Edge that we wanted to highlight here as well!
+
+- [Olympics-themed computer vision app on AWS Wavelength with MongoDB](https://github.com/kukicado/vz-immersion-day-demo)
+- [Instrumenting your EKS cluster with Pixie and New Relic](https://github.com/newrelic-experimental/vz-newrelic-5g-edge)
+- [Wavelength MQTT Latency Tester](https://github.com/aws-samples/aws-mqtt-wavelength-latency)
+- [MongoDB Realm on AWS Wavelength](https://github.com/VKonanur/MongoDB-Realm-for-Verizon-5G-Edge/)
 
 
 ## Contribute
