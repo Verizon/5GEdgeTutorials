@@ -1,0 +1,548 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  CouchbaseClusterName:
+    Type: String
+    Default: Couchbid
+  CouchbaseAdministratorPassword:
+    Type: String 
+    Default: password
+    Description: Enter Administrator password for Couchbase cluster
+  SyncGatewayPassword:
+    Type: String 
+    Default: password
+    Description: Enter password for Sync Gateway connections
+  CloudSubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: VPC subnet for couchbase cluster
+  EdgeSubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Wavelength subnet for couchbid API and Sync Gateway
+  CouchbaseNodeInstanceType:
+    Type: String
+    Default: t3.xlarge
+    AllowedValues:
+    - t3.medium
+    - t3.xlarge
+    - r5.2xlarge
+    Description: Choose instance type to be used for Couchbase nodes
+  SyncGatewayInstanceType:
+    Type: String
+    Default: t3.xlarge
+    AllowedValues:
+    - t3.medium
+    - t3.xlarge
+    - r5.2xlarge
+    Description: Choose instance type to be used for Couchbase Sync Gateway
+Resources:
+  couchbase0NetInt:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId: 
+        Ref: CloudSubnetId
+      GroupSet:
+      - Fn::GetAtt:
+        - sgCouchbase
+        - GroupId
+  couchbase1NetInt:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId:
+        Ref: CloudSubnetId
+      GroupSet:
+      - Fn::GetAtt:
+        - sgCouchbase
+        - GroupId
+  couchbase2NetInt:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId:
+        Ref: CloudSubnetId
+      GroupSet:
+      - Fn::GetAtt:
+        - sgCouchbase
+        - GroupId
+  syncGatewayCloudNetInt:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId:
+        Ref: CloudSubnetId
+      GroupSet:
+      - Fn::GetAtt:
+        - sgSyncGatewayCloud
+        - GroupId
+  couchbase0:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      InstanceType:
+        Ref: CouchbaseNodeInstanceType
+      NetworkInterfaces:
+      - 
+        NetworkInterfaceId: 
+          Ref: couchbase0NetInt
+        DeviceIndex: 0
+      Tags:
+      - Key: Name
+        Value: couchbase-node-000
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/usr/bin/env bash
+            set -xe
+            echo Dowloading couchbase repository...
+            curl -O https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-amd64.deb
+            echo Installing couchbase repository...
+            dpkg -i ./couchbase-release-1.0-amd64.deb
+            apt -y update #&& apt -y upgrade;
+            echo Installing couchbase server...
+            apt install -y couchbase-server awscli
+            echo Installed couchbase server.
+            echo Waiting for couchbase to start
+            while ! nc -z localhost 8091; do
+              echo .
+              sleep 5
+            done
+            echo 'Initializing cluster...'
+            cbcli='/opt/couchbase/bin/couchbase-cli'
+            $cbcli cluster-init \
+              --cluster "127.0.0.1:8091" \
+              --cluster-name "Couchbid-Example" \
+              --cluster-username "Administrator" \
+              --cluster-password "${clusterPassword}" \
+              --services data,index,query,fts,eventing,analytics,backup \
+            echo Creating couchbid bucket...
+            $cbcli bucket-create \
+              --cluster "127.0.0.1:8091" \
+              --username "Administrator" \
+              --password "${clusterPassword}" \
+              --bucket couchbid \
+              --bucket-type couchbase \
+              --bucket-ramsize 1024
+            echo Created couchbid bucket.
+          - clusterPassword: !Ref CouchbaseAdministratorPassword
+  couchbase1:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      InstanceType:
+        Ref: CouchbaseNodeInstanceType
+      NetworkInterfaces:
+      - 
+        NetworkInterfaceId: 
+          Ref: couchbase1NetInt
+        DeviceIndex: 0
+      Tags:
+      - Key: Name
+        Value: couchbase-node-001
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/usr/bin/env bash
+            set -xe
+            echo Dowloading couchbase repository...
+            curl -O https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-amd64.deb
+            echo Installing couchbase repository...
+            dpkg -i ./couchbase-release-1.0-amd64.deb
+            apt -y update #&& apt -y upgrade;
+            echo Installing couchbase server...
+            apt install -y couchbase-server awscli
+            echo Installed couchbase server.
+            echo Waiting for couchbase to start
+            while ! nc -z localhost 8091; do
+              echo .
+              sleep 5
+            done
+            echo 'Trying to join existing cluster at ${clusterAddress}...'
+
+            cbcli='/opt/couchbase/bin/couchbase-cli'
+            timeout --preserve-status 10 $cbcli server-add \
+              --cluster "http://${clusterAddress}:8091" \
+              --username "Administrator" \
+              --password "${clusterPassword}" \
+              --services data,index,query,fts,eventing,analytics,backup \
+              --server-add "http://$(ec2metadata --local-ipv4):8091/" \
+              --server-add-username "Administrator" \
+              --server-add-password "${clusterPassword}"
+
+            echo Joined cluster ${clusterAddress}
+          - clusterPassword: !Ref CouchbaseAdministratorPassword
+            clusterAddress: !GetAtt
+              - couchbase0NetInt
+              - PrimaryPrivateIpAddress
+  couchbase2:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      InstanceType:
+        Ref: CouchbaseNodeInstanceType
+      NetworkInterfaces:
+      - 
+        NetworkInterfaceId: 
+          Ref: couchbase2NetInt
+        DeviceIndex: 0
+      Tags:
+      - Key: Name
+        Value: couchbase-node-002
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/usr/bin/env bash
+            set -xe
+            echo Dowloading couchbase repository...
+            curl -O https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-amd64.deb
+            echo Installing couchbase repository...
+            dpkg -i ./couchbase-release-1.0-amd64.deb
+            apt -y update #&& apt -y upgrade;
+            echo Installing couchbase server...
+            apt install -y couchbase-server awscli
+            echo Installed couchbase server.
+            echo Waiting for couchbase to start
+            while ! nc -z localhost 8091; do
+              echo .
+              sleep 5
+            done
+            echo 'Trying to join existing cluster at ${clusterAddress}...'
+
+            cbcli='/opt/couchbase/bin/couchbase-cli'
+            timeout --preserve-status 10 $cbcli server-add \
+              --cluster "http://${clusterAddress}:8091" \
+              --username "Administrator" \
+              --password "${clusterPassword}" \
+              --services data,index,query,fts,eventing,analytics,backup \
+              --server-add "http://$(ec2metadata --local-ipv4):8091/" \
+              --server-add-username "Administrator" \
+              --server-add-password "${clusterPassword}"
+
+            echo Joined cluster $clusterAddress
+          - clusterPassword: !Ref CouchbaseAdministratorPassword
+            clusterAddress: !GetAtt
+              - couchbase0NetInt
+              - PrimaryPrivateIpAddress
+  cloudSyncGateway:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      InstanceType:
+        Ref: SyncGatewayInstanceType
+      NetworkInterfaces:
+      - 
+        NetworkInterfaceId: 
+          Ref: syncGatewayCloudNetInt
+        DeviceIndex: 0
+      Tags:
+      - Key: Name
+        Value: cloud-sync-gateway
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/usr/bin/env bash
+            set -xe
+            wget http://packages.couchbase.com/releases/couchbase-sync-gateway/2.8.3/couchbase-sync-gateway-enterprise_2.8.3_x86_64.deb
+            dpkg -i couchbase-sync-gateway-enterprise_2.8.3_x86_64.deb
+            systemctl stop sync_gateway
+            cat << EOF > /home/sync_gateway/sync_gateway.json
+            {
+              "adminInterface": "0.0.0.0:4985",
+              "interface": "0.0.0.0:4984",
+              "log": ["*"],
+              "logging": {
+                "console": {
+                  "enabled": true,
+                  "log_level": "debug",
+                  "log_keys": ["*"]
+                },
+                "warn": {
+                  "enabled": true,
+                  "rotation": {
+                    "max_size": 20,
+                    "max_age": 90
+                  }
+                },
+                "info": {
+                  "enabled": false
+                },
+                "debug": {
+                  "enabled": false
+                },
+                "error": {
+                  "enabled": true,
+                  "rotation": {
+                    "max_size": 20,
+                    "max_age": 180
+                  }
+                }
+              },
+              "databases": {
+                "couchbid": {
+                  "server": "http://${clusterAddress}:8091?network=default",
+                  "username": "Administrator",
+                  "password": "${clusterPassword}",
+                  "bucket": "couchbid",
+                  "enable_shared_bucket_access": true,
+                  "import_docs": true,
+                  "delta_sync": {
+                    "enabled": false
+                  },
+                  "num_index_replicas": 0,
+                  "users": {
+                    "couchbid": {
+                            "password": "${syncGatewayPassword}"
+                    }
+                  },
+                  "allow_conflicts": false,
+                  "sync": "function sync(doc, oldDoc) { channel('!') }",
+                  "replications": {
+                    "couchbid": {
+                      "direction": "pushAndPull",
+                      "remote": "http://couchbid:cf7bc96dca91bc3a2efab3250981a76f08afb822@${edgeSyncGatewayAddr}:4984/couchbid"
+                    }
+                  }
+                }
+              },
+            }
+            EOF
+            chown sync_gateway:sync_gateway /home/sync_gateway/sync_gateway.json
+            systemctl start sync_gateway
+          - clusterPassword: !Ref CouchbaseAdministratorPassword
+            clusterAddress: !GetAtt
+              - couchbase0NetInt
+              - PrimaryPrivateIpAddress
+            edgeSyncGatewayAddr: !GetAtt
+              - edgeSyncGateway
+              - PrivateIp
+            syncGatewayPassword: !Ref SyncGatewayPassword
+  edgeSyncGateway:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      InstanceType:
+        Ref: SyncGatewayInstanceType
+      NetworkInterfaces:
+      - 
+        DeviceIndex: 0
+        SubnetId:
+          Ref: EdgeSubnetId
+        GroupSet:
+        - Fn::GetAtt:
+          - sgSyncGatewayEdge
+          - GroupId
+      Tags:
+      - Key: Name
+        Value: edge-sync-gateway
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/usr/bin/env bash
+            set -xe
+            wget http://packages.couchbase.com/releases/couchbase-sync-gateway/2.8.3/couchbase-sync-gateway-enterprise_2.8.3_x86_64.deb
+            dpkg -i couchbase-sync-gateway-enterprise_2.8.3_x86_64.deb
+            systemctl stop sync_gateway
+            cat << EOF > /home/sync_gateway/sync_gateway.json
+            {
+              "adminInterface": "0.0.0.0:4985",
+              "interface": "0.0.0.0:4984",
+              "log": ["*"],
+              "logging": {
+                "console": {
+                  "enabled": true,
+                  "log_level": "debug",
+                  "log_keys": ["*"]
+                },
+                "warn": {
+                  "enabled": true,
+                  "rotation": {
+                    "max_size": 20,
+                    "max_age": 90
+                  }
+                },
+                "info": {
+                  "enabled": false
+                },
+                "debug": {
+                  "enabled": false
+                },
+                "error": {
+                  "enabled": true,
+                  "rotation": {
+                    "max_size": 20,
+                    "max_age": 180
+                  }
+                }
+              },
+              "databases": {
+                "couchbid": {
+                  "server": "http://${clusterAddress}:8091?network=default",
+                  "username": "Administrator",
+                  "password": "${clusterPassword}",
+                  "bucket": "couchbid",
+                  "enable_shared_bucket_access": true,
+                  "import_docs": true,
+                  "delta_sync": {
+                    "enabled": false
+                  },
+                  "num_index_replicas": 0,
+                  "users": {
+                    "couchbid": {
+                            "password": "${syncGatewayPassword}"
+                    }
+                  },
+                  "allow_conflicts": false,
+                  "sync": "function sync(doc, oldDoc) { channel('!') }",
+                  "replications": {
+                    "wavelength": {
+                      "direction": "pushAndPull",
+                      "remote": "http://couchbid:cf7bc96dca91bc3a2efab3250981a76f08afb822@${wavelengthSyncGatewayAddr}:4984/wavelength"
+                    }
+                  }
+                }
+              },
+            }
+            EOF
+            chown sync_gateway:sync_gateway /home/sync_gateway/sync_gateway.json
+            systemctl start sync_gateway
+          - clusterPassword: !Ref CouchbaseAdministratorPassword
+            clusterAddress: !GetAtt
+              - couchbase0NetInt
+              - PrimaryPrivateIpAddress
+            wavelengthSyncGatewayAddr: !GetAtt
+              - syncGatewayCloudNetInt
+              - PrimaryPrivateIpAddress
+            syncGatewayPassword: !Ref SyncGatewayPassword
+  cloudApi:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      InstanceType:
+        Ref: SyncGatewayInstanceType
+      NetworkInterfaces:
+      - 
+        DeviceIndex: 0
+        SubnetId:
+          Ref: CloudSubnetId
+        GroupSet:
+        - Fn::GetAtt:
+          - sgApiCloud
+          - GroupId
+      Tags:
+      - Key: Name
+        Value: cloud-couchbid-api
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #! /usr/bin/env bash
+
+            apt install -y docker
+            service docker start
+
+            docker run -e cbsettings_CBLocation='Wavelength' \
+            -e cbsettings_CBMode='Server' \
+            -e cbsettings_CBUsername='Administrator' \
+            -e cbsettings_CBPassword='${clusterPassword}' \
+            -e cbsettings_CBConnectionString='couchbase://${clusterAddress}' \
+            -e cbsettings_CBBucketName='couchbid' \
+            -e cbsettings_CBScopeName='_default' \
+            -e cbsettings_CBCollectionName='_default' \
+            -e cbsettings_CBDatabaseName='auctions' \
+            -e cbsettings_CBSyncGatewayUri='ws://${syncGatewayAddr}:4984/wavelength' \
+            -e cbsettings_CBSyncGatewayUsername='couchbid' \
+            -e cbsettings_CBSyncGatewayPassword='cf7bc96dca91bc3a2efab3250981a76f08afb822' \
+            -e cbsettings_CBUseSsl=false \
+            -e cbsettings_CBClosingCode='uuddlrlrbaba.P1' \
+            -e cbsettings_CBDurabilityPersistToMajority=true \
+            -p 80:80 \
+            public.ecr.aws/z2f7n8a1/couchbid-api
+          - clusterPassword: !Ref CouchbaseAdministratorPassword
+            clusterAddress: !GetAtt
+              - couchbase0NetInt
+              - PrimaryPrivateIpAddress
+            syncGatewayAddr: !GetAtt
+              - syncGatewayCloudNetInt
+              - PrimaryPrivateIpAddress
+  sgSyncGatewayCloud:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Security group for cloud Sync Gateway deployment
+  sgSyncGatewayEdge:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for edge Sync Gateway deployment
+  sgCouchbase:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Security group for couchbase nodes
+  sgApiCloud:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Security group for couchbid api
+  apiCloudEgressToCouchbase:
+    Type: 'AWS::EC2::SecurityGroupEgress'
+    Properties:
+      GroupId: !GetAtt ['sgApiCloud', 'GroupId']
+      DestinationSecurityGroupId: !GetAtt ['sgCouchbase', 'GroupId']
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+  couchbaseIngressFromCloudApi:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt ['sgCouchbase', 'GroupId']
+      SourceSecurityGroupId: !GetAtt ['sgApiCloud', 'GroupId']
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+  syncGatewayCloudEgressToCouchbase:
+    Type: 'AWS::EC2::SecurityGroupEgress'
+    Properties:
+      GroupId: !GetAtt ['sgSyncGatewayCloud', 'GroupId']
+      DestinationSecurityGroupId: !GetAtt ['sgCouchbase', 'GroupId']
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+  syncGatewayEdgeEgressToCouchbase:
+    Type: 'AWS::EC2::SecurityGroupEgress'
+    Properties:
+      GroupId: !GetAtt ['sgSyncGatewayEdge', 'GroupId']
+      DestinationSecurityGroupId: !GetAtt ['sgCouchbase', 'GroupId']
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+  couchbaseIngressFromCloudSyncGateway:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt ['sgCouchbase', 'GroupId']
+      SourceSecurityGroupId: !GetAtt ['sgSyncGatewayCloud', 'GroupId']
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+  couchbaseIngressFromEdgeSyncGateway:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt ['sgCouchbase', 'GroupId']
+      SourceSecurityGroupId: !GetAtt ['sgSyncGatewayEdge', 'GroupId']
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+  couchbaseInternetAccess:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !GetAtt ['sgCouchbase', 'GroupId']
+      IpProtocol: tcp
+      CidrIp: 0.0.0.0/0
+      FromPort: 0
+      ToPort: 65535
+  couchbaseInternalTraffic:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt ['sgCouchbase', 'GroupId']
+      SourceSecurityGroupId: !GetAtt ['sgCouchbase', 'GroupId']
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+  couchbaseSshTraffic:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt ['sgCouchbase', 'GroupId']
+      IpProtocol: tcp
+      CidrIp: 0.0.0.0/0
+      FromPort: 22
+      ToPort: 22

@@ -26,3 +26,16 @@ TODO - explain process
 ## Sync Gateway
 
 You can use the logs-sync-gateway.sh to validate the configuration is working with Sync Gateway.
+
+## Cloudformation Template
+Provided `cloudformation.template.yaml` creates an example stack that can be deployed to an edge zone.
+The stack depends on 2 pre-existing subnets -- one in a regular aws zone (cloud subnet) and one in an edge zone (edge subnet).
+The following components will be created:
+- a 3-instance couchbase cluster: `couchbase-node-001 ... couchbase-node-003`
+- `couchbid` bucket used to store application data
+- Couchbid API instance: `cloud-couchbid-api`
+- Cloud Sync Gateway instance: `cloud-sync-gateway`
+- Edge Sync Gateway instance: `edge-sync-gateway`
+
+The template uses simplified security model and is not intended to be used for production deployments.
+
