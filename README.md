@@ -19,18 +19,22 @@ To learn more, check out the [Verizon 5G Edge Developer Resources page](https://
 
 We want to make it easier than ever to develop applications for the network edge. To that end, we've created a number of starter projects, tutorials, and infrastructure templates that get your Verizon 5G Edge infrastructure up-and-running in seconds. From there, feel free to experiment with some of the starter applications we've developed, including the following:
 
+**Infrastructure Resources**
+ - `terraform`: Get started using HashiCorp Terraform across HAProxy, MongoDB, and AWS Wavelength (EC2/EKS)
  - `cdk-tutorials`: Use the AWS CDK to create starter modules using AWS Wavelength 
  - `cloudformation-templates`: Use AWS CloudFormation to launch your first 5G Edge infrastructure template
- - `confluent`: Build your first data streaming application using Confluent for Kubernetes on AWS Wavelength
- - `edge-discovery`: Get started with the Verizon edge discovery service, an easy-to-use API to manage multi-Wavelength zone deployments and route mobile clients to the most optimal edge endpoints
- - `new-relic`: Instrument your first EKS environment using Pixie
- - `openshift`: Deploying your first OpenShift cluster to AWS Wavelength 
  - `sdk-tutorials`: Get started using Boto3 (Python SDK for AWS) across EC2 or EKS
+ - `edge-discovery`: Get started with the Verizon edge discovery service, an easy-to-use API to manage multi-Wavelength zone deployments and route mobile clients to the most optimal edge endpoints
+ 
+**Partner Resources**
+ - `opscruise`: Instrument your first EKS environment using OpsCruise 
+ - `confluent`: Build your first data streaming application using Confluent for Kubernetes on AWS Wavelength
+ - `openshift`: Deploying your first OpenShift cluster to AWS Wavelength 
  - `sumologic`: Instrument your first EC2-based edge deployment using Sumo Logic custom collectors
- - `terraform`: Get started using HashiCorp Terraform across HAProxy, MongoDB, EC2, and EKS
 
 
 ## Community Resources
+
 There are a bunch of awesome projects building on Verizon 5G Edge that we wanted to highlight here as well!
 
 - [Olympics-themed computer vision app on AWS Wavelength with MongoDB](https://github.com/kukicado/vz-immersion-day-demo)

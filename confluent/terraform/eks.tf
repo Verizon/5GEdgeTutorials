@@ -20,6 +20,7 @@ module "eks_cluster" {
   source          = "terraform-aws-modules/eks/aws"
   cluster_name    = var.cluster_name
   cluster_version = "1.21"
+  version         = "17.24.0"
   subnets = [for subnet in aws_subnet.region_subnets: subnet.id]
 
   vpc_id = aws_vpc.tf_vpc.id

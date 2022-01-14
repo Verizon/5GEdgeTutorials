@@ -19,6 +19,7 @@ provider "kubernetes" {
 module "eks_cluster" {
   source          = "terraform-aws-modules/eks/aws"
   cluster_name    = var.cluster_name
+  version         = "17.24.0"
   cluster_version = "1.21"
   subnets = [for subnet in aws_subnet.region_subnets: subnet.id]
 
