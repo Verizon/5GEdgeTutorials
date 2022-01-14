@@ -1,3 +1,4 @@
+![](5gedge_logo.png)
 # Verizon 5G Edge Demos & Tutorials
 Tutorials, starter guides, and simple projects to launch your first application at the network edge.
 > Brought to you by the Verizon 5G Edge Developer Relations Team
@@ -27,10 +28,11 @@ We want to make it easier than ever to develop applications for the network edge
  - `edge-discovery`: Get started with the Verizon edge discovery service, an easy-to-use API to manage multi-Wavelength zone deployments and route mobile clients to the most optimal edge endpoints
  
 **Partner Resources**
- - `opscruise`: Instrument your first EKS environment using OpsCruise 
  - `confluent`: Build your first data streaming application using Confluent for Kubernetes on AWS Wavelength
+ - `couchbase`: Build your first auction application on AWS Wavelnegth with Couchbase Server and Sync Gateway
  - `openshift`: Deploying your first OpenShift cluster to AWS Wavelength 
  - `sumologic`: Instrument your first EC2-based edge deployment using Sumo Logic custom collectors
+ - `opscruise`: Instrument your first EKS environment using OpsCruise 
 
 
 ## Community Resources
