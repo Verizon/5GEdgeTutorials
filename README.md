@@ -1,4 +1,4 @@
-![](5gedge_logo.png)
+<img src="5gedge_logo.png" alt="logo" width="200"/>
 # Verizon 5G Edge Demos & Tutorials
 Tutorials, starter guides, and simple projects to launch your first application at the network edge.
 > Brought to you by the Verizon 5G Edge Developer Relations Team
