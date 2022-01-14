@@ -42,10 +42,12 @@ We want to make it easier than ever to develop applications for the network edge
 
 There are a bunch of awesome projects building on Verizon 5G Edge that we wanted to highlight here as well!
 
-- [Olympics-themed computer vision app on AWS Wavelength with MongoDB](https://github.com/kukicado/vz-immersion-day-demo)
-- [Instrumenting your EKS cluster with Pixie and New Relic](https://github.com/newrelic-experimental/vz-newrelic-5g-edge)
-- [Wavelength MQTT Latency Tester](https://github.com/aws-samples/aws-mqtt-wavelength-latency)
-- [MongoDB Realm on AWS Wavelength](https://github.com/VKonanur/MongoDB-Realm-for-Verizon-5G-Edge/)
+- [kukicado/vz-immersion-day-demo](https://github.com/kukicado/vz-immersion-day-demo): Olympics-themed computer vision app on AWS Wavelength with MongoDB
+- [newrelic-experimental/vz-newrelic-5g-edge](https://github.com/newrelic-experimental/vz-newrelic-5g-edge): Instrumenting your EKS cluster with Pixie and New Relic
+- [aws-samples/aws-mqtt-wavelength-latency](https://github.com/aws-samples/aws-mqtt-wavelength-latency): Wavelength MQTT latency tester
+- [VKonanur/MongoDB-Realm-for-Verizon-5G-Edge/](https://github.com/VKonanur/MongoDB-Realm-for-Verizon-5G-Edge/): MongoDB Realm on AWS Wavelength
+- [AWS Lab (Machine Learning)](https://master.d18rwqwq407dgs.amplifyapp.com/): Object detection using AWS Wavelength
+- [AWS Lab (Video Streaming)](https://www.eventbox.dev/published/lesson/wavelength-media/index.html): WebRTC on AWS Wavelength
 
 
 ## Contribute
