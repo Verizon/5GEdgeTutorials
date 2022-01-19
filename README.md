@@ -32,7 +32,7 @@ We want to make it easier than ever to develop applications for the network edge
  
 **Partner Resources**
  - `confluent`: Build your first data streaming application using Confluent for Kubernetes on AWS Wavelength
- - `couchbase`: Build your first auction application on AWS Wavelnegth with Couchbase Server and Sync Gateway
+ - `couchbase`: Build your first auction application on AWS Wavelength with Couchbase Server and Sync Gateway
  - `openshift`: Deploying your first OpenShift cluster to AWS Wavelength 
  - `sumologic`: Instrument your first EC2-based edge deployment using Sumo Logic custom collectors
  - `opscruise`: Instrument your first EKS environment using OpsCruise 
@@ -48,7 +48,12 @@ There are a bunch of awesome projects building on Verizon 5G Edge that we wanted
 - [VKonanur/MongoDB-Realm-for-Verizon-5G-Edge/](https://github.com/VKonanur/MongoDB-Realm-for-Verizon-5G-Edge/): MongoDB Realm on AWS Wavelength
 - [AWS Lab (Machine Learning)](https://master.d18rwqwq407dgs.amplifyapp.com/): Object detection using AWS Wavelength
 - [AWS Lab (Video Streaming)](https://www.eventbox.dev/published/lesson/wavelength-media/index.html): WebRTC on AWS Wavelength
+- [Couchbase Lab (Infrastructure)](https://blog.couchbase.com/wavelength-zones-for-edge-computing-with-couchbase/): Couchbase on AWS Wavelength Demo
 
+
+## 5G Edge Resources
+- [5G Edge Blog on Medium](https://verizon5gedgeblog.medium.com/): Check out the latest tutorials and customer success stories
+- [5G Edge Training](https://www.pluralsight.com/courses/aws-wavelength-introduction): Learn more about [EC2 on AWS Wavelength](https://www.pluralsight.com/courses/aws-wavelength-introduction) or [Containers on AWS Wavelength](https://www.pluralsight.com/courses/containers-aws-wavelength)
 
 ## Contribute
 
