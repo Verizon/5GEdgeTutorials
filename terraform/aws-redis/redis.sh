@@ -7,10 +7,10 @@ git clone https://github.com/RedisLabs/redis-enterprise-k8s-docs.git
 
 kubectl create namespace redis-demo
 kubectl config set-context --current --namespace=redis-demo
-kubectl apply -f redis-enterprise-k8s-docs/bundle.yaml
+kubectl apply -f https://raw.githubusercontent.com/RedisLabs/redis-enterprise-k8s-docs/6.2.8-15/bundle.yaml 
 kubectl apply -f redis-enterprise-k8s-docs/examples/v1/rec.yaml
 
-sleep 600
+sleep 10
 
 
 cat << EOF > /tmp/redis-enterprise-database.yml
