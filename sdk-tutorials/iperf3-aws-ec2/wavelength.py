@@ -16,12 +16,21 @@ SSH_PERMISSION = {
     "ToPort": 22,
 }
 
+HTTP_PERMISSION = {
+    "IpProtocol": "tcp",
+    "FromPort": 80,
+    "ToPort": 80,
+}
+
 ANY_IP_PERMISSION = {
     "IpProtocol": "tcp",
     "FromPort": 0,
     "ToPort": 65535,
     "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "Any IP"}],
 }
+
+CURL_FORMAT_FILE = "./curl-format.txt"
+SAMPLE_FILE = "sample.4ds"
 
 app = typer.Typer()
 ec2_client = boto3.client("ec2")
@@ -88,13 +97,19 @@ def deploy(
     wavelength_ami: str = typer.Option(
         "ami-0348652b6078c2c1d", help="AMI ID for the Wavelength instance"
     ),
+    startup_script: str = typer.Option(
+        "scripts/startup.sh",
+        help="Script to run when starting the instances for the first time",
+    ),
     use_existing: bool = typer.Option(
         False,
         help="Use existing items where feasible, otherwise exit when existing items are encountered",
     ),
 ):
     """
-    Create a test node in AWS Wavelength with iperf installed and running, an EC2 bastion host from which you can SSH into the Wavelegth node, and other AWS infrastructure to support them.
+    Create test nodes in AWS Wavelength and EC2 with iperf and NGINX installed
+    and running, and other AWS infrastructure to support them. The EC2 instances
+    is also a bastion host from which you can SSH into the Wavelegth node.
     """
     typer.secho("Creating VPC", bold=True)
     # TODO: Error out on existing VPC
@@ -167,6 +182,8 @@ def deploy(
             icmp_permission,
             iperf_tcp_permission,
             iperf_udp_permission,
+            HTTP_PERMISSION
+            | {"IpRanges": [wavelength_address_block, management_address_block]},
         ],
     )
     ec2_client.authorize_security_group_egress(
@@ -202,7 +219,7 @@ def deploy(
         private_key_file.write(keypair["KeyMaterial"])
     os.chmod(key_file, 0o600)
 
-    with open("scripts/iperf.sh") as user_data_file:
+    with open(startup_script) as user_data_file:
         user_data = user_data_file.read()
 
     typer.secho("Creating bastion instance", bold=True)
@@ -334,14 +351,29 @@ def deploy(
 
     typer.secho("Done!", fg=typer.colors.GREEN, bold=True)
     bastion_instance.reload()
+    bastion_ip = bastion_instance.public_ip_address
+    wavelength_ip = carrier_ip["CarrierIp"]
+
     typer.echo("SSH to the bastion host:")
     typer.secho(
-        f"    ssh -i {key_file} -o IdentitiesOnly=yes {bastion_username}@{bastion_instance.public_ip_address}",
+        f"    ssh -i {key_file} -o IdentitiesOnly=yes {bastion_username}@{bastion_ip}",
         bold=True,
     )
     typer.echo("iperf to the Wavelength node:")
+    typer.secho(f"    iperf3 --client {wavelength_ip} --port {iperf_port}", bold=True)
+    typer.echo("Download sample file from the Wavelength node:")
     typer.secho(
-        f"    iperf3 --client {carrier_ip['CarrierIp']} --port {iperf_port}", bold=True
+        f'    curl -w"@{CURL_FORMAT_FILE}" -o /dev/null http://{wavelength_ip}/{SAMPLE_FILE}',
+        bold=True,
+    )
+    typer.echo("Download sample file from the EC2 node:")
+    typer.secho(
+        f'    curl -w"@{CURL_FORMAT_FILE}" -o /dev/null http://{bastion_ip}/{SAMPLE_FILE}',
+        bold=True,
+    )
+    typer.secho(
+        "Note: it may take another 5-10 minutes for your instances to finish installing and be responsive to requests.",
+        bold=True,
     )
 
 

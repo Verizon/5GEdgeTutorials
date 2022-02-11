@@ -23,3 +23,7 @@ The only option for the `teardown` command is the name of the VPC to destroy. If
 ## Author
 
 [Jim Pfleger](https://github.com/codemonkeyjim)
+
+## Acknowledgements
+
+- `curl` timing output from [Simon East via Stack Overflow](https://stackoverflow.com/a/22625150)
