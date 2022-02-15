@@ -1,6 +1,6 @@
 # Wavelength Testing
 
-This is a CLI tool for deploying test nodes in AWS Wavelength and EC2, and for later tearing them down. The nodes run [`iperf3`](https://iperf.fr/) and [NGINX](http://nginx.org/) to act as test servers.
+This is a CLI tool for deploying test nodes in AWS Wavelength and EC2, and for later tearing them down. The nodes run [`iperf3`](https://iperf.fr/) and [NGINX](https://nginx.org/) to act as test servers.
 
 ## Installation
 
