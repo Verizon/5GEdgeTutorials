@@ -2,8 +2,7 @@
 
 sudo su
 yum install -y epel-release
-# Updating is very slow (~15 minutes), which confuses users
-# yum update -y
+yum update -y
 yum install -y iperf3 nginx
 
 # TODO: templatize and take URL, filename, ports as arguments

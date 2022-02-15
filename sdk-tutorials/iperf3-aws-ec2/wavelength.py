@@ -35,6 +35,23 @@ ANY_IP_PERMISSION = {
 CURL_FORMAT_FILE = "./curl-format.txt"
 SAMPLE_FILE = "sample.4ds"
 
+INSTANCE_STATE_STYLE = {
+    "pending": "gray",
+    "running": "green",
+    "shutting-down": "red",
+    "terminated": "bold red",
+    "stopping": "red",
+    "stopped": "bold red",
+}
+
+INSTANCE_STATUS_STYLE = {
+    "ok": "green",
+    "impaired": "bold red",
+    "insufficient-data": "yellow",
+    "not-applicaable": "gray",
+    "initializing": "gray",
+}
+
 app = typer.Typer()
 ec2_client = boto3.client("ec2")
 ec2_resource = boto3.resource("ec2")
@@ -52,19 +69,24 @@ def bailout(messages=[]):
 def instance_status_table(instances: dict[str, str]) -> tuple[Table, bool]:
     instance_ids = list(instances.keys())
     table = Table()
-    for column in ["Instance", "Status"]:
+    for column in ["Instance", "State", "Status"]:
         table.add_column(column)
 
     response = ec2_client.describe_instance_status(InstanceIds=instance_ids)
     all_ok = True
     for row in response["InstanceStatuses"]:
+        instance_state = row["InstanceState"]["Name"]
         instance_status = row["InstanceStatus"]["Status"]
-        table.add_row(instances[row["InstanceId"]], instance_status)
+        table.add_row(
+            instances[row["InstanceId"]],
+            f"[{INSTANCE_STATE_STYLE[instance_state]}]{instance_state}",
+            f"[{INSTANCE_STATUS_STYLE[instance_status]}]{instance_status}",
+        )
         all_ok &= instance_status == "ok"
     return (table, all_ok)
 
 
-def monitor_startup(instances: dict[str, str], interval=5, max_iterations=120) -> bool:
+def monitor_startup(instances: dict[str, str], interval=5, max_iterations=180) -> bool:
     iterations = 0
     with Live(None, auto_refresh=False) as live:
         while iterations < max_iterations:
@@ -382,14 +404,20 @@ def deploy(
     )
 
     typer.secho("Waiting on instance startups", bold=True)
-    monitor_startup(
+    all_ok = monitor_startup(
         {
             bastion_instance.id: "Bastion",
             wavelength_instance.id: "Wavelength",
         }
     )
 
-    typer.secho("Done!", fg=typer.colors.GREEN, bold=True)
+    if all_ok:
+        typer.secho("Done!", fg=typer.colors.GREEN, bold=True)
+    else:
+        typer.secho(
+            "Timed out waiting for instance startus", fg=typer.colors.YELLOW, bold=True
+        )
+
     bastion_instance.reload()
     bastion_ip = bastion_instance.public_ip_address
     wavelength_ip = carrier_ip["CarrierIp"]
@@ -409,10 +437,6 @@ def deploy(
     typer.echo("Download sample file from the EC2 node:")
     typer.secho(
         f'    curl -w"@{CURL_FORMAT_FILE}" -o /dev/null http://{bastion_ip}/{SAMPLE_FILE}',
-        bold=True,
-    )
-    typer.secho(
-        "Note: it may take another 5-10 minutes for your instances to finish installing and be responsive to requests.",
         bold=True,
     )
 
