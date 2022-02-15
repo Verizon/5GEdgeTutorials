@@ -49,6 +49,7 @@ There are a bunch of awesome projects building on Verizon 5G Edge that we wanted
 - [AWS Lab (Machine Learning)](https://master.d18rwqwq407dgs.amplifyapp.com/): Object detection using AWS Wavelength
 - [AWS Lab (Video Streaming)](https://www.eventbox.dev/published/lesson/wavelength-media/index.html): WebRTC on AWS Wavelength
 - [Couchbase Lab (Infrastructure)](https://blog.couchbase.com/wavelength-zones-for-edge-computing-with-couchbase/): Couchbase on AWS Wavelength Demo
+- [HarperDB/hdb-deploy-aws-wavelength-ec2-cloudformation](https://github.com/HarperDB/hdb-deploy-aws-wavelength-ec2-cloudformation): HarperDB 3.1.3 nodes on AWS Wavelength
 
 
 ## 5G Edge Resources
