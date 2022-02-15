@@ -2,7 +2,10 @@ import boto3
 from botocore.exceptions import ClientError
 import json
 import os
+from rich.live import Live
+from rich.table import Table
 import sys
+import time
 import typer
 
 MIN_PYTHON = (3, 10)
@@ -44,6 +47,35 @@ def bailout(messages=[]):
     for msg in messages:
         typer.secho(msg)
     raise typer.Exit(code=1)
+
+
+def instance_status_table(instances: dict[str, str]) -> tuple[Table, bool]:
+    instance_ids = list(instances.keys())
+    table = Table()
+    for column in ["Instance", "Status"]:
+        table.add_column(column)
+
+    response = ec2_client.describe_instance_status(InstanceIds=instance_ids)
+    all_ok = True
+    for row in response["InstanceStatuses"]:
+        instance_status = row["InstanceStatus"]["Status"]
+        table.add_row(instances[row["InstanceId"]], instance_status)
+        all_ok &= instance_status == "ok"
+    return (table, all_ok)
+
+
+def monitor_startup(instances: dict[str, str], interval=5, max_iterations=120) -> bool:
+    iterations = 0
+    with Live(None, auto_refresh=False) as live:
+        while iterations < max_iterations:
+            table, all_ok = instance_status_table(instances)
+            live.update(table)
+            live.refresh()
+            if all_ok:
+                return True
+            iterations += 1
+            time.sleep(interval)
+    return False
 
 
 @app.command()
@@ -347,6 +379,14 @@ def deploy(
     ec2_client.associate_iam_instance_profile(
         IamInstanceProfile={"Name": instance_profile_name},
         InstanceId=wavelength_instance.id,
+    )
+
+    typer.secho("Waiting on instance startups", bold=True)
+    monitor_startup(
+        {
+            bastion_instance.id: "Bastion",
+            wavelength_instance.id: "Wavelength",
+        }
     )
 
     typer.secho("Done!", fg=typer.colors.GREEN, bold=True)
