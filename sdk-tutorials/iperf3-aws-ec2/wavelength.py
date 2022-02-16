@@ -146,13 +146,13 @@ def deploy(
         "t3.medium", help="Machine type for the Wavelength node"
     ),
     bastion_ami: str = typer.Option(
-        "ami-0348652b6078c2c1d", help="AMI ID for the bastion host"
+        "ami-0341aeea105412b57", help="AMI ID for the bastion host"
     ),
     wavelength_ami: str = typer.Option(
-        "ami-0348652b6078c2c1d", help="AMI ID for the Wavelength instance"
+        "ami-0341aeea105412b57", help="AMI ID for the Wavelength instance"
     ),
     startup_script: str = typer.Option(
-        "scripts/startup.sh",
+        "scripts/startup-amazon-linux.sh",
         help="Script to run when starting the instances for the first time",
     ),
     use_existing: bool = typer.Option(
@@ -258,6 +258,7 @@ def deploy(
             icmp_permission,
             iperf_tcp_permission,
             iperf_udp_permission,
+            HTTP_PERMISSION | {"IpRanges": [wavelength_address_block]},
         ],
     )
     ec2_client.authorize_security_group_egress(
@@ -293,9 +294,6 @@ def deploy(
         ],
         UserData=user_data,
     )[0]
-
-    #  TODO: Get this from the instance
-    bastion_username = "centos"
 
     carrier_ip = ec2_client.allocate_address(
         Domain="vpc", NetworkBorderGroup=wl_zone_name
@@ -421,6 +419,9 @@ def deploy(
     bastion_instance.reload()
     bastion_ip = bastion_instance.public_ip_address
     wavelength_ip = carrier_ip["CarrierIp"]
+
+    #  TODO: Get this from the instance
+    bastion_username = "ec2-user"
 
     typer.echo("SSH to the bastion host:")
     typer.secho(
