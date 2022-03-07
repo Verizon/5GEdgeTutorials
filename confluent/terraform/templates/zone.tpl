@@ -48,7 +48,7 @@ spec:
     custom:
     - externalAccess:
         nodePort:
-          host: np.${domain}
+          host: ${namespace}.${domain}
           nodePortOffset: ${nodeport_offset}
         type: nodePort
       name: np
