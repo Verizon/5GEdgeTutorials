@@ -41,7 +41,7 @@ resource "aws_subnet" "wavelength_subnets" {
 resource "aws_internet_gateway" "tf_internet_gw" {
   vpc_id = aws_vpc.tf_vpc.id
   tags = {
-    Name = ${var.cluster_name}
+    Name = "${var.cluster_name}"
   }
 }
 
@@ -49,6 +49,6 @@ resource "aws_internet_gateway" "tf_internet_gw" {
 resource "aws_ec2_carrier_gateway" "tf_carrier_gateway" {
   vpc_id = aws_vpc.tf_vpc.id
   tags = {
-    Name = ${var.cluster_name}
+    Name = "${var.cluster_name}"
   }
 }
