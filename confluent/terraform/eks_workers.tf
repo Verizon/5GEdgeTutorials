@@ -15,13 +15,16 @@ locals {
 }
 
 # Create security group for edge resources
-resource "aws_security_group_rule" "edge_confluent_1" {
+resource "aws_security_group_rule" "edge_confluent" {
+  for_each = var.wavelength_zones
+
   type              = "ingress"
-  from_port         = 31000
-  to_port           = 31003
+  from_port         = each.value.nodeport_offset
+  to_port           = each.value.nodeport_offset + 3
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = module.eks_cluster.worker_security_group_id
+  description       = "Nodeport rule for zone ${each.key}"
 }
 
 resource "aws_launch_template" "worker_launch_template" {
