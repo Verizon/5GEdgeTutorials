@@ -33,6 +33,11 @@ Parameters:
     - t3.xlarge
     - r5.2xlarge
     Description: Choose instance type to be used for Couchbase Sync Gateway
+  BaseAmiId:
+    Type: String
+      ImageId: 
+        Ref: BaseAmiId
+    Description: Enter AMI id for Ubuntu LTS or other apt-based Linux distribution 
 Resources:
   couchbase0NetInt:
     Type: AWS::EC2::NetworkInterface
@@ -73,7 +78,8 @@ Resources:
   couchbase0:
     Type: 'AWS::EC2::Instance'
     Properties:
-      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      ImageId: 
+        Ref: BaseAmiId
       InstanceType:
         Ref: CouchbaseNodeInstanceType
       NetworkInterfaces:
@@ -123,7 +129,8 @@ Resources:
   couchbase1:
     Type: 'AWS::EC2::Instance'
     Properties:
-      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      ImageId: 
+        Ref: BaseAmiId
       InstanceType:
         Ref: CouchbaseNodeInstanceType
       NetworkInterfaces:
@@ -172,7 +179,8 @@ Resources:
   couchbase2:
     Type: 'AWS::EC2::Instance'
     Properties:
-      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      ImageId: 
+        Ref: BaseAmiId
       InstanceType:
         Ref: CouchbaseNodeInstanceType
       NetworkInterfaces:
@@ -221,7 +229,8 @@ Resources:
   cloudSyncGateway:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      ImageId: 
+        Ref: BaseAmiId
       InstanceType:
         Ref: SyncGatewayInstanceType
       NetworkInterfaces:
@@ -314,7 +323,8 @@ Resources:
   edgeSyncGateway:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      ImageId: 
+        Ref: BaseAmiId
       InstanceType:
         Ref: SyncGatewayInstanceType
       NetworkInterfaces:
@@ -411,7 +421,8 @@ Resources:
   cloudApi:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0892d3c7ee96c0bf7 #ubuntu 20.04 amd64
+      ImageId: 
+        Ref: BaseAmiId
       InstanceType:
         Ref: SyncGatewayInstanceType
       NetworkInterfaces:
