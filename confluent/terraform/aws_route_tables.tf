@@ -2,7 +2,7 @@
 resource "aws_route_table" "region_route_table" {
   vpc_id = aws_vpc.tf_vpc.id
   tags = {
-    Name = "Region Route Table"
+    Name = "${var.cluster_name}-Region-RT"
   }
 }
 
@@ -24,7 +24,7 @@ resource "aws_route_table_association" "region_route_associations" {
 resource "aws_route_table" "WLZ_route_table" {
   vpc_id = aws_vpc.tf_vpc.id
   tags = {
-    Name = "Wavelength Zone Route Table"
+    Name = "${var.cluster_name}-Wavelength-RT"
   }
 }
 
