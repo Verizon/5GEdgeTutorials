@@ -16,7 +16,8 @@ Use these values to populate your `secret.tfvars` file for the Terraform module.
 ```
 atlas_public_key = <your-public-key>
 atlas_private_key = <your-private-key>
-group_id = <your-org-id>
+atlas_org_id = <your-org-id>
+group_id = <your-project-id>
 atlas_dbpassword = <atlas-database-password>
 aws_account_id = <AWS-account-number>
 atlas_vpc_cidr = <Atlas-CIDR-block>
