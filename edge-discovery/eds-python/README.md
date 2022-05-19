@@ -108,6 +108,14 @@ Selecting closest Mobile Edge Computing (MEC) endpoint...
 Your Closest Edge Zone: us-east-1-wl1-bos-wlz-1
 Your Closest IP Address: 155.146.96.195
 ```
+## Contributors
+This SDK was made possible by the following team:
+- Naveen Chintala
+- Siva Saravanan
+- Rajasekhar Thadakamalla 
+- Venkatalakshmi D (Divya) Tirumalaraju
+- Ravikumar Gulla
+
 
 ## Resources
 To learn more, visit the [5G Edge Documentation](https://www98.verizon.com/business/5g-edge-portal/documentation/verizon-5g-edge-discovery-service/get-started.html/) to learn more.
