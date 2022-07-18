@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: foo
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "topology.kubernetes.io/zone"
+                operator: In
+                values:
+                - "us-east-1-wl1-nyc-wlz-1"
+                - "us-east-1-wl1-bos-wlz-1"
+                - "us-east-1-wl1-was-wlz-1"
+      containers:
+      - name: api
+        image: digitalronin/foo-microservice:0.1
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo-service
+  labels:
+    app: foo-service
+spec:
+  ports:
+  - port: 5000
+    name: http
+    targetPort: 5000
+  selector:
+    app: foo
+    
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bar-service
+  labels:
+    app: bar-service
+spec:
+  ports:
+  - port: 5000
+    name: http
+    targetPort: 5000
+  selector:
+    app: bar    
+    
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bar
+  template:
+    metadata:
+      labels:
+        app: bar
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "topology.kubernetes.io/zone"
+                operator: In
+                values:
+                - "us-east-1-wl1-nyc-wlz-1"
+                - "us-east-1-wl1-bos-wlz-1"
+                - "us-east-1-wl1-was-wlz-1"
+      containers:
+      - name: api
+        image: digitalronin/bar-microservice:0.1
+        ports:
+        - containerPort: 5000
