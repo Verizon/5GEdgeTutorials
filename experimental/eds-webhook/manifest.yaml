@@ -1,0 +1,87 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eds-webhook
+  namespace: default
+  labels:
+    name: eds-webhook
+spec:
+  ports:
+  - name: webhook
+    port: 443
+    targetPort: 8080
+  selector:
+    name: eds-webhook 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eds-webhook
+  namespace: default
+  labels:
+    name: eds-webhook
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: eds-webhook
+  template:
+    metadata:
+      name: eds-webhook 
+      labels:
+        name: eds-webhook
+    spec:
+      serviceAccountName: eds-serviceaccount
+      containers:
+        - name: webhook
+          image: adeell85/eds-webhook
+          imagePullPolicy: Always
+          env:
+            - name:  AWS_SDK_LOAD_CONFIG
+              value: "true"
+            - name:  AWS_REGION
+              value: "us-east-1"
+            - name: VZEDS_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: vzeds
+                  key: secret
+            - name: VZEDS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vzeds
+                  key: key
+          args:
+            - -alsologtostderr
+            - --log_dir=/
+            - -v=10
+            - 2>&1
+          resources:
+            limits:
+              memory: 50Mi
+              cpu: 300m
+            requests:
+              memory: 00Mi
+              cpu: 300m
+          volumeMounts:
+            - name: webhook-certs
+              mountPath: /etc/certs
+              readOnly: true
+            - name: aws-cred
+              mountPath: /root/.aws
+              readOnly: true
+            - name: logs
+              mountPath: /tmp
+          securityContext:
+            readOnlyRootFilesystem: true
+      volumes:
+        - name: webhook-certs
+          secret:
+            secretName: eds-webhook
+        - name: aws-cred
+          secret:
+            secretName: aws-cred
+        - name: logs
+          emptyDir: {}
