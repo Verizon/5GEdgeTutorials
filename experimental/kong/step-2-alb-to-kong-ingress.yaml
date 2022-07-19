@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "my-ingress"
+  namespace: kong
+  annotations:
+    alb.ingress.kubernetes.io/subnets: <your-wavelength-subnet-id>
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kong-proxy
+            port:
+              number: 80
+              
+            
