@@ -1,0 +1,26 @@
+datadog:
+  clusterName: kubeadm
+  processAgent:
+    processCollection: true
+  dogstatsd:
+    useHostPort: true
+  kubeStateMetricsCore:
+    enabled: true
+  kubeStateMetricsEnabled: false
+  kubelet:
+    tlsVerify: false
+  networkMonitoring:
+    enabled: true
+clusterAgent:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          # - key: datadoghq.com/cluster-agent
+          #   operator: Exists
+          - key: failure-domain.beta.kubernetes.io/zone
+            operator: In
+            values:
+            - us-east-1a
+            - us-east-1b
