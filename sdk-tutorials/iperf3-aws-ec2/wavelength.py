@@ -2,7 +2,10 @@ import boto3
 from botocore.exceptions import ClientError
 import json
 import os
+from rich.live import Live
+from rich.table import Table
 import sys
+import time
 import typer
 
 MIN_PYTHON = (3, 10)
@@ -16,11 +19,37 @@ SSH_PERMISSION = {
     "ToPort": 22,
 }
 
+HTTP_PERMISSION = {
+    "IpProtocol": "tcp",
+    "FromPort": 80,
+    "ToPort": 80,
+}
+
 ANY_IP_PERMISSION = {
     "IpProtocol": "tcp",
     "FromPort": 0,
     "ToPort": 65535,
     "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "Any IP"}],
+}
+
+CURL_FORMAT_FILE = "./curl-format.txt"
+SAMPLE_FILE = "sample.4ds"
+
+INSTANCE_STATE_STYLE = {
+    "pending": "gray",
+    "running": "green",
+    "shutting-down": "red",
+    "terminated": "bold red",
+    "stopping": "red",
+    "stopped": "bold red",
+}
+
+INSTANCE_STATUS_STYLE = {
+    "ok": "green",
+    "impaired": "bold red",
+    "insufficient-data": "yellow",
+    "not-applicaable": "gray",
+    "initializing": "gray",
 }
 
 app = typer.Typer()
@@ -35,6 +64,40 @@ def bailout(messages=[]):
     for msg in messages:
         typer.secho(msg)
     raise typer.Exit(code=1)
+
+
+def instance_status_table(instances: dict[str, str]) -> tuple[Table, bool]:
+    instance_ids = list(instances.keys())
+    table = Table()
+    for column in ["Instance", "State", "Status"]:
+        table.add_column(column)
+
+    response = ec2_client.describe_instance_status(InstanceIds=instance_ids)
+    all_ok = True
+    for row in response["InstanceStatuses"]:
+        instance_state = row["InstanceState"]["Name"]
+        instance_status = row["InstanceStatus"]["Status"]
+        table.add_row(
+            instances[row["InstanceId"]],
+            f"[{INSTANCE_STATE_STYLE[instance_state]}]{instance_state}",
+            f"[{INSTANCE_STATUS_STYLE[instance_status]}]{instance_status}",
+        )
+        all_ok &= instance_status == "ok"
+    return (table, all_ok)
+
+
+def monitor_startup(instances: dict[str, str], interval=5, max_iterations=180) -> bool:
+    iterations = 0
+    with Live(None, auto_refresh=False) as live:
+        while iterations < max_iterations:
+            table, all_ok = instance_status_table(instances)
+            live.update(table)
+            live.refresh()
+            if all_ok:
+                return True
+            iterations += 1
+            time.sleep(interval)
+    return False
 
 
 @app.command()
@@ -83,10 +146,14 @@ def deploy(
         "t3.medium", help="Machine type for the Wavelength node"
     ),
     bastion_ami: str = typer.Option(
-        "ami-0348652b6078c2c1d", help="AMI ID for the bastion host"
+        "ami-0341aeea105412b57", help="AMI ID for the bastion host"
     ),
     wavelength_ami: str = typer.Option(
-        "ami-0348652b6078c2c1d", help="AMI ID for the Wavelength instance"
+        "ami-0341aeea105412b57", help="AMI ID for the Wavelength instance"
+    ),
+    startup_script: str = typer.Option(
+        "scripts/startup-amazon-linux.sh",
+        help="Script to run when starting the instances for the first time",
     ),
     use_existing: bool = typer.Option(
         False,
@@ -94,7 +161,9 @@ def deploy(
     ),
 ):
     """
-    Create a test node in AWS Wavelength with iperf installed and running, an EC2 bastion host from which you can SSH into the Wavelegth node, and other AWS infrastructure to support them.
+    Create test nodes in AWS Wavelength and EC2 with iperf and NGINX installed
+    and running, and other AWS infrastructure to support them. The EC2 instances
+    is also a bastion host from which you can SSH into the Wavelegth node.
     """
     typer.secho("Creating VPC", bold=True)
     # TODO: Error out on existing VPC
@@ -167,6 +236,8 @@ def deploy(
             icmp_permission,
             iperf_tcp_permission,
             iperf_udp_permission,
+            HTTP_PERMISSION
+            | {"IpRanges": [wavelength_address_block, management_address_block]},
         ],
     )
     ec2_client.authorize_security_group_egress(
@@ -187,6 +258,7 @@ def deploy(
             icmp_permission,
             iperf_tcp_permission,
             iperf_udp_permission,
+            HTTP_PERMISSION | {"IpRanges": [wavelength_address_block]},
         ],
     )
     ec2_client.authorize_security_group_egress(
@@ -202,7 +274,7 @@ def deploy(
         private_key_file.write(keypair["KeyMaterial"])
     os.chmod(key_file, 0o600)
 
-    with open("scripts/iperf.sh") as user_data_file:
+    with open(startup_script) as user_data_file:
         user_data = user_data_file.read()
 
     typer.secho("Creating bastion instance", bold=True)
@@ -222,9 +294,6 @@ def deploy(
         ],
         UserData=user_data,
     )[0]
-
-    #  TODO: Get this from the instance
-    bastion_username = "centos"
 
     carrier_ip = ec2_client.allocate_address(
         Domain="vpc", NetworkBorderGroup=wl_zone_name
@@ -332,16 +401,44 @@ def deploy(
         InstanceId=wavelength_instance.id,
     )
 
-    typer.secho("Done!", fg=typer.colors.GREEN, bold=True)
+    typer.secho("Waiting on instance startups", bold=True)
+    all_ok = monitor_startup(
+        {
+            bastion_instance.id: "Bastion",
+            wavelength_instance.id: "Wavelength",
+        }
+    )
+
+    if all_ok:
+        typer.secho("Done!", fg=typer.colors.GREEN, bold=True)
+    else:
+        typer.secho(
+            "Timed out waiting for instance startus", fg=typer.colors.YELLOW, bold=True
+        )
+
     bastion_instance.reload()
+    bastion_ip = bastion_instance.public_ip_address
+    wavelength_ip = carrier_ip["CarrierIp"]
+
+    #  TODO: Get this from the instance
+    bastion_username = "ec2-user"
+
     typer.echo("SSH to the bastion host:")
     typer.secho(
-        f"    ssh -i {key_file} -o IdentitiesOnly=yes {bastion_username}@{bastion_instance.public_ip_address}",
+        f"    ssh -i {key_file} -o IdentitiesOnly=yes {bastion_username}@{bastion_ip}",
         bold=True,
     )
     typer.echo("iperf to the Wavelength node:")
+    typer.secho(f"    iperf3 --client {wavelength_ip} --port {iperf_port}", bold=True)
+    typer.echo("Download sample file from the Wavelength node:")
     typer.secho(
-        f"    iperf3 --client {carrier_ip['CarrierIp']} --port {iperf_port}", bold=True
+        f'    curl -w"@{CURL_FORMAT_FILE}" -o /dev/null http://{wavelength_ip}/{SAMPLE_FILE}',
+        bold=True,
+    )
+    typer.echo("Download sample file from the EC2 node:")
+    typer.secho(
+        f'    curl -w"@{CURL_FORMAT_FILE}" -o /dev/null http://{bastion_ip}/{SAMPLE_FILE}',
+        bold=True,
     )
 
 
